@@ -1,5 +1,5 @@
 // ======= Modelo de datos y helpers =======
-const STORAGE='finanzas_lautaro_v3_fixed';
+const STORAGE='finanzas_lautaro_v4';
 let DB_FILES; // IndexedDB for receipts
 let state = JSON.parse(localStorage.getItem(STORAGE) || '{}');
 const $ = (sel,root=document)=>root.querySelector(sel);
@@ -80,7 +80,8 @@ function initCalendar() {
                 yearElement.classList.add('current');
             }
 
-            yearElement.addEventListener('click', () => {
+            yearElement.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que el evento se propague
                 currentSelectedYear = year;
                 renderMonths();
                 showView(monthView);
@@ -107,7 +108,8 @@ function initCalendar() {
                 monthElement.classList.add('selected');
             }
 
-            monthElement.addEventListener('click', () => {
+            monthElement.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que el evento se propague
                 currentSelectedMonth = index;
                 renderDays();
                 showView(dayView);
@@ -138,8 +140,8 @@ function initCalendar() {
 
         // Días del mes anterior
         const prevMonthLastDay = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
-        for (let i = startingDay - 1; i >= 0; i--) {
-            const day = prevMonthLastDay - i;
+        for (let i = 0; i < startingDay; i++) {
+            const day = prevMonthLastDay - (startingDay - 1 - i);
             daysHTML += `<div class="day-item other-month">${day}</div>`;
         }
 
@@ -169,7 +171,8 @@ function initCalendar() {
 
         // Agregar event listeners a los días
         dayGrid.querySelectorAll('.day-item:not(.other-month)').forEach(dayElement => {
-            dayElement.addEventListener('click', () => {
+            dayElement.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevenir que el evento se propague
                 const day = parseInt(dayElement.getAttribute('data-day'));
                 currentSelectedDay = day;
                 
@@ -192,29 +195,34 @@ function initCalendar() {
 
     // ======= EVENT LISTENERS =======
     // Navegación de décadas
-    prevDecadeBtn.addEventListener('click', () => {
+    prevDecadeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         currentDecade -= 10;
         renderYears();
     });
 
-    nextDecadeBtn.addEventListener('click', () => {
+    nextDecadeBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         currentDecade += 10;
         renderYears();
     });
 
     // Navegación de años
-    prevYearBtn.addEventListener('click', () => {
+    prevYearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         currentSelectedYear--;
         renderMonths();
     });
 
-    nextYearBtn.addEventListener('click', () => {
+    nextYearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         currentSelectedYear++;
         renderMonths();
     });
 
     // Navegación de meses
-    prevMonthBtn.addEventListener('click', () => {
+    prevMonthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         currentSelectedMonth--;
         if (currentSelectedMonth < 0) {
             currentSelectedMonth = 11;
@@ -223,7 +231,8 @@ function initCalendar() {
         renderDays();
     });
 
-    nextMonthBtn.addEventListener('click', () => {
+    nextMonthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         currentSelectedMonth++;
         if (currentSelectedMonth > 11) {
             currentSelectedMonth = 0;
@@ -233,7 +242,8 @@ function initCalendar() {
     });
 
     // Borrar mes actual
-    clearMonthBtn.addEventListener('click', () => {
+    clearMonthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (confirm('¿Estás seguro de que quieres borrar todos los datos de este mes?')) {
             const key = monthKey();
             
@@ -273,6 +283,165 @@ function initCalendar() {
 
     // Inicializar
     updateMonthDisplay();
+    renderYears();
+}
+
+// ======= CALENDARIO PARA FORMULARIOS =======
+function initFormCalendar(inputId) {
+    const input = document.getElementById(inputId);
+    const calendarId = `calendar-${inputId}`;
+    
+    // Crear el modal del calendario si no existe
+    if (!document.getElementById(calendarId)) {
+        const calendarHTML = `
+            <div class="form-calendar-modal" id="${calendarId}">
+                <div class="form-calendar-view">
+                    <div class="form-calendar-header">
+                        <button class="form-calendar-nav prev-month"><i class="fas fa-chevron-left"></i></button>
+                        <span class="form-calendar-month-year">Enero 2025</span>
+                        <button class="form-calendar-nav next-month"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                    <div class="form-day-grid">
+                        <div class="form-week-days">
+                            <div>D</div><div>L</div><div>M</div><div>X</div><div>J</div><div>V</div><div>S</div>
+                        </div>
+                        <div class="form-days-grid" id="days-${calendarId}"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        const container = document.createElement('div');
+        container.className = 'form-calendar-container';
+        container.innerHTML = calendarHTML;
+        
+        input.parentNode.insertBefore(container, input.nextSibling);
+        container.insertBefore(input, container.firstChild);
+    }
+    
+    const calendarModal = document.getElementById(calendarId);
+    const monthYearDisplay = calendarModal.querySelector('.form-calendar-month-year');
+    const daysGrid = document.getElementById(`days-${calendarId}`);
+    const prevMonthBtn = calendarModal.querySelector('.prev-month');
+    const nextMonthBtn = calendarModal.querySelector('.next-month');
+    
+    let currentYear = new Date().getFullYear();
+    let currentMonth = new Date().getMonth();
+    const monthsFull = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const weekDays = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
+    
+    function renderFormCalendarDays() {
+        monthYearDisplay.textContent = `${monthsFull[currentMonth]} ${currentYear}`;
+        
+        const firstDay = new Date(currentYear, currentMonth, 1);
+        const lastDay = new Date(currentYear, currentMonth + 1, 0);
+        const daysInMonth = lastDay.getDate();
+        const startingDay = firstDay.getDay();
+        
+        let daysHTML = '';
+        
+        // Días del mes anterior
+        const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
+        for (let i = 0; i < startingDay; i++) {
+            const day = prevMonthLastDay - (startingDay - 1 - i);
+            daysHTML += `<div class="form-day-item other-month">${day}</div>`;
+        }
+        
+        // Días del mes actual
+        const today = new Date();
+        const isToday = (day) => {
+            return day === today.getDate() && 
+                   currentMonth === today.getMonth() && 
+                   currentYear === today.getFullYear();
+        };
+        
+        const currentValue = input.value ? new Date(input.value) : null;
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const isTodayClass = isToday(day) ? 'today' : '';
+            const isSelectedClass = currentValue && 
+                                  day === currentValue.getDate() && 
+                                  currentMonth === currentValue.getMonth() && 
+                                  currentYear === currentValue.getFullYear() ? 'selected' : '';
+            daysHTML += `<div class="form-day-item ${isTodayClass} ${isSelectedClass}" data-day="${day}">${day}</div>`;
+        }
+        
+        // Días del siguiente mes
+        const totalCells = 42;
+        const remainingCells = totalCells - (startingDay + daysInMonth);
+        for (let day = 1; day <= remainingCells; day++) {
+            daysHTML += `<div class="form-day-item other-month">${day}</div>`;
+        }
+        
+        daysGrid.innerHTML = daysHTML;
+        
+        // Event listeners para los días
+        daysGrid.querySelectorAll('.form-day-item:not(.other-month)').forEach(dayElement => {
+            dayElement.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const day = parseInt(dayElement.getAttribute('data-day'));
+                const selectedDate = new Date(currentYear, currentMonth, day);
+                input.value = selectedDate.toISOString().split('T')[0];
+                
+                daysGrid.querySelectorAll('.form-day-item').forEach(d => d.classList.remove('selected'));
+                dayElement.classList.add('selected');
+                
+                calendarModal.classList.remove('show');
+            });
+        });
+    }
+    
+    // Navegación
+    prevMonthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentMonth--;
+        if (currentMonth < 0) {
+            currentMonth = 11;
+            currentYear--;
+        }
+        renderFormCalendarDays();
+    });
+    
+    nextMonthBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        currentMonth++;
+        if (currentMonth > 11) {
+            currentMonth = 0;
+            currentYear++;
+        }
+        renderFormCalendarDays();
+    });
+    
+    // Abrir/cerrar calendario
+    input.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Cerrar otros calendarios
+        document.querySelectorAll('.form-calendar-modal.show').forEach(modal => {
+            if (modal.id !== calendarId) {
+                modal.classList.remove('show');
+            }
+        });
+        calendarModal.classList.toggle('show');
+        
+        // Si hay un valor en el input, mostrar ese mes
+        if (input.value) {
+            const date = new Date(input.value);
+            currentYear = date.getFullYear();
+            currentMonth = date.getMonth();
+        }
+        
+        renderFormCalendarDays();
+    });
+    
+    // Cerrar al hacer clic fuera
+    document.addEventListener('click', (e) => {
+        if (!input.contains(e.target) && !calendarModal.contains(e.target)) {
+            calendarModal.classList.remove('show');
+        }
+    });
+    
+    // Render inicial
+    renderFormCalendarDays();
 }
 
 // ======= FIN SISTEMA DE CALENDARIO =======
@@ -288,6 +457,10 @@ function ensureMonth(){
     mascotas:[], 
     salud:[], 
     deportes:[],
+    salidas:[],
+    cochera:[],
+    lucy:[],
+    cristina:[],
     tarjetas:{
       ciudad:{limite:0, utilizado:0, movimientos:[]},
       naranja:{limite:0, utilizado:0, movimientos:[]}
@@ -381,7 +554,7 @@ async function downloadFile(id){
 function renderKPIs(){
   const k=ensureMonth(), m=state[k];
   const sueldo=m.sueldo||0;
-  const gastosKeys = ['servicios', 'mama', 'delivery', 'transporte', 'mascotas', 'salud', 'deportes'];
+  const gastosKeys = ['servicios', 'mama', 'delivery', 'transporte', 'mascotas', 'salud', 'deportes', 'salidas', 'cochera', 'lucy', 'cristina'];
   const gastos = gastosKeys.reduce((acc,key)=>acc + m[key].reduce((a,b)=>a+Number(b.monto),0),0);
   const tarjetasUsado = (m.tarjetas.ciudad.utilizado||0) + (m.tarjetas.naranja.utilizado||0);
   $('#kpiSueldo').textContent = fmt(sueldo);
@@ -424,6 +597,10 @@ function render(id){
   if(id==='mascotas') return renderGeneric('🐶 Mascotas','mascotas', m, ['Alimento perros','Vet','Accesorios']);
   if(id==='salud') return renderGeneric('🧠 Salud Mental','salud', m, ['Psicóloga Lautaro','Psiquiatra Lautaro','Terapia de pareja']);
   if(id==='deportes') return renderGeneric('🏋️ Deportes','deportes', m, ['Pádel','Gimnasio']);
+  if(id==='salidas') return renderGeneric('🎬 Salidas','salidas', m, ['Boliche','Restaurante','Bar','Evento','Otro']);
+  if(id==='cochera') return renderGeneric('🅿️ Pago Cochera','cochera', m, ['Cochera Mensual']);
+  if(id==='lucy') return renderGeneric('👩 Pago Lucy','lucy', m, ['Pago Lucy']);
+  if(id==='cristina') return renderGeneric('👩 Pago Cristina','cristina', m, ['Pago Cristina']);
   if(id==='resumen') return renderResumen(m);
 }
 
@@ -441,6 +618,8 @@ function renderGeneric(titulo,key,m,opciones){
         <input id="desc-${key}" placeholder="Detalle"/>
         <label><i class="fas fa-dollar-sign"></i> Monto</label>
         <input type="number" id="monto-${key}" />
+        <label><i class="fas fa-calendar"></i> Fecha</label>
+        <input type="date" id="fecha-${key}" class="form-calendar-input" />
         <label><i class="fas fa-credit-card"></i> Método de pago</label>
         <select id="pago-${key}">
           <option>Efectivo/Débito</option>
@@ -460,16 +639,22 @@ function renderGeneric(titulo,key,m,opciones){
   </div>`;
   el.innerHTML = formHTML;
   
+  // Inicializar calendario para este formulario
+  setTimeout(() => {
+    initFormCalendar(`fecha-${key}`);
+  }, 100);
+  
   // submit
   $(`#form-${key}`).onsubmit = async (e)=>{
     e.preventDefault();
     const cat=$(`#cat-${key}`).value; 
     const desc=$(`#desc-${key}`).value.trim();
     const monto=Number($(`#monto-${key}`).value||0); 
+    const fecha=$(`#fecha-${key}`).value;
     const pago=$(`#pago-${key}`).value;
     const file=$(`#file-${key}`).files[0];
     
-    if(!desc || !monto) return alert('Completá descripción y monto.');
+    if(!desc || !monto || !fecha) return alert('Completá descripción, monto y fecha.');
     
     const fileId = file? await storeFile(file): null;
     const item={
@@ -477,9 +662,9 @@ function renderGeneric(titulo,key,m,opciones){
       cat, 
       desc, 
       monto, 
+      fecha,
       pago, 
-      fileId, 
-      fecha:new Date().toISOString().slice(0,10)
+      fileId
     };
     
     m[key].push(item);
@@ -509,6 +694,9 @@ function drawTable(key,items){
     return; 
   }
   
+  // Ordenar por fecha (más reciente primero)
+  const sortedItems = [...items].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
+  
   cont.innerHTML = `
     <div class="table-container">
       <table>
@@ -524,7 +712,7 @@ function drawTable(key,items){
           </tr>
         </thead>
         <tbody>
-          ${items.map(it=>`
+          ${sortedItems.map(it=>`
             <tr>
               <td><span class="pill">${it.cat}</span></td>
               <td>${it.desc}</td>
@@ -663,7 +851,7 @@ function renderTarjetas(m){
 }
 
 function drawMovs(m){
-  const items=[...m.tarjetas.ciudad.movimientos, ...m.tarjetas.naranja.movimientos].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  const items=[...m.tarjetas.ciudad.movimientos, ...m.tarjetas.naranja.movimientos].sort((a,b)=>new Date(b.fecha) - new Date(a.fecha));
   const cont = $('#tabla-tarjetas');
   
   if(items.length===0){ 
@@ -700,7 +888,7 @@ function drawMovs(m){
 function renderResumen(m){
   const byCat = [
     'servicios', 'mama', 'delivery', 'transporte', 
-    'mascotas', 'salud', 'deportes'
+    'mascotas', 'salud', 'deportes', 'salidas', 'cochera', 'lucy', 'cristina'
   ].map(key=>[key, m[key].reduce((a,b)=>a+Number(b.monto),0)]);
   
   const gastos = byCat.reduce((a,[,v])=>a+v,0);
@@ -723,6 +911,46 @@ function renderResumen(m){
           <i class="fas fa-folder"></i> ${k}: <b>${fmt(v)}</b>
         </div>
       `).join('') || '<p><i class="fas fa-inbox"></i> Sin gastos</p>'}
+    </div>
+    <div class="card">
+      <h2><i class="fas fa-history"></i> Últimos Gastos</h2>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th><i class="fas fa-tag"></i> Categoría</th>
+              <th><i class="fas fa-align-left"></i> Descripción</th>
+              <th><i class="fas fa-dollar-sign"></i> Monto</th>
+              <th><i class="fas fa-calendar"></i> Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${[
+              ...m.servicios.map(s=>({...s, categoria:'Servicios'})),
+              ...m.mama.map(s=>({...s, categoria:'Mamá'})),
+              ...m.delivery.map(s=>({...s, categoria:'Delivery'})),
+              ...m.transporte.map(s=>({...s, categoria:'Transporte'})),
+              ...m.mascotas.map(s=>({...s, categoria:'Mascotas'})),
+              ...m.salud.map(s=>({...s, categoria:'Salud'})),
+              ...m.deportes.map(s=>({...s, categoria:'Deportes'})),
+              ...m.salidas.map(s=>({...s, categoria:'Salidas'})),
+              ...m.cochera.map(s=>({...s, categoria:'Cochera'})),
+              ...m.lucy.map(s=>({...s, categoria:'Lucy'})),
+              ...m.cristina.map(s=>({...s, categoria:'Cristina'}))
+            ]
+            .sort((a,b)=>new Date(b.fecha) - new Date(a.fecha))
+            .slice(0,10)
+            .map(g=>`
+              <tr>
+                <td><span class="pill">${g.categoria}</span></td>
+                <td>${g.desc}</td>
+                <td>${fmt(g.monto)}</td>
+                <td>${g.fecha}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>`;
 }
 
@@ -775,7 +1003,7 @@ function buildReportLines() {
   lines.push(`REPORTE MENSUAL — ${k}`);
   lines.push('');
   lines.push(`Sueldo: ${fmt(m.sueldo || 0)}`);
-  const keys = ['mama', 'servicios', 'delivery', 'transporte', 'mascotas', 'salud', 'deportes'];
+  const keys = ['servicios', 'mama', 'delivery', 'transporte', 'mascotas', 'salud', 'deportes', 'salidas', 'cochera', 'lucy', 'cristina'];
   let totalG = 0;
   keys.forEach(key => {
     const subtotal = m[key].reduce((a, b) => a + Number(b.monto), 0);
