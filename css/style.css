@@ -1,0 +1,444 @@
+/* style.css - Versión con calendario completo de días */
+:root{
+  --bg:#f6f7fb;--panel:#fff;--text:#111827;--muted:#6b7280;
+  --brand:#0ea5e9;--accent:#3b82f6;--danger:#ef4444;--ok:#22c55e;
+  --radius:12px;--shadow:0 10px 30px rgba(0,0,0,.08)
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;color:var(--text);background:var(--bg)}
+.container{display:flex;min-height:100vh}
+.sidebar{width:300px;background:linear-gradient(180deg,#0ea5e9,#0284c7);color:#fff;padding:18px;display:flex;flex-direction:column;gap:16px}
+.sidebar h2{margin:0 0 6px; display: flex; align-items: center; gap: 10px;}
+.sidebar h2 i {font-size: 1.2em; color: white;}
+.sidebar ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;overflow:auto}
+.sidebar li{padding:10px 12px;border-radius:10px;cursor:pointer;white-space:normal;display: flex; align-items: center; gap: 10px; color: white;}
+.sidebar li i {color: rgba(255,255,255,0.9); width: 20px; text-align: center;}
+.sidebar li:hover,.sidebar li.active{background:rgba(255,255,255,.2)}
+.sidebar-actions{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.sidebar-actions button,.filebtn{background:#fff;color:#0369a1;border:none;border-radius:10px;padding:10px 12px;cursor:pointer;font-weight:700;text-align:center;display: flex; align-items: center; justify-content: center; gap: 8px;}
+.sidebar-actions button i,.filebtn i {color:#0369a1;}
+.filebtn input{display:none}
+
+.content{flex:1;padding:22px;display:flex;flex-direction:column;gap:16px}
+header{display:flex;justify-content:space-between;align-items:center;background:var(--panel);padding:14px 16px;border-radius:var(--radius);box-shadow:var(--shadow); flex-wrap: wrap; gap: 15px;}
+header h1 {margin: 0; font-size: 1.5rem;}
+
+/* ======= CALENDARIO COMPLETO CON DÍAS ======= */
+.date-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 12px 20px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 200px;
+}
+
+.date-container:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+}
+
+.date-container i {
+  color: white;
+  font-size: 1.4em;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+}
+
+#mesActualDisplay {
+  border: none;
+  font-size: 1.1rem;
+  background: transparent;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  min-width: 140px;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* Modal del calendario */
+.calendar-modal {
+  display: none;
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 10px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  z-index: 1000;
+  min-width: 320px;
+  animation: slideDown 0.3s ease;
+  border: 1px solid #e5e7eb;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.calendar-modal.show {
+  display: block;
+}
+
+.calendar-view {
+  padding: 0;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 16px 16px 0 0;
+}
+
+.calendar-year,
+.calendar-year-range,
+.calendar-month-year {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: white;
+}
+
+.calendar-nav {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.calendar-nav:hover {
+  background: rgba(255,255,255,0.3);
+  transform: scale(1.1);
+}
+
+.calendar-nav i {
+  color: white;
+}
+
+/* Grid de años */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 20px;
+}
+
+.year-item {
+  padding: 15px 10px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  background: #f8fafc;
+  color: #374151;
+  font-size: 1rem;
+}
+
+.year-item:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.year-item.current {
+  background: var(--accent);
+  color: white;
+}
+
+.year-item.selected {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+}
+
+/* Grid de meses */
+.month-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 20px;
+}
+
+.month-item {
+  padding: 12px 8px;
+  text-align: center;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  background: #f8fafc;
+  color: #374151;
+}
+
+.month-item:hover {
+  background: #e5e7eb;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.month-item.current {
+  background: var(--accent);
+  color: white;
+}
+
+.month-item.selected {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+}
+
+/* Grid de días */
+.day-grid {
+  padding: 15px;
+}
+
+.week-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.week-days div {
+  padding: 8px 4px;
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.day-item {
+  padding: 10px 5px;
+  text-align: center;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+  background: #f8fafc;
+  color: #374151;
+  font-size: 0.9rem;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.day-item:hover {
+  background: #e5e7eb;
+  transform: translateY(-1px);
+}
+
+.day-item.other-month {
+  color: #9ca3af;
+  background: #f3f4f6;
+}
+
+.day-item.today {
+  background: var(--accent);
+  color: white;
+  font-weight: 700;
+}
+
+.day-item.selected {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.calendar-actions {
+  padding: 15px 20px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: center;
+}
+
+.calendar-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+}
+
+.calendar-btn.danger {
+  background: var(--danger);
+  color: white;
+}
+
+.calendar-btn.danger:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.calendar-btn i {
+  color: inherit;
+}
+
+/* ======= FIN CALENDARIO COMPLETO ======= */
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.kpi{background:var(--panel);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+.kpi h3{margin:0;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.1em; display: flex; align-items: center; gap: 8px;}
+.kpi h3 i {color: var(--muted);}
+.kpi .value{font-size:22px;font-weight:800;margin-top:6px}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--panel);padding:16px;border-radius:var(--radius);box-shadow:var(--shadow)}
+.card h2{margin:0 0 10px; display: flex; align-items: center; gap: 10px;}
+.card h2 i {color: var(--accent);}
+form{display:grid;gap:10px}
+label{font-size:12px;color:var(--muted); display: flex; align-items: center; gap: 5px;}
+label i {color: var(--muted);}
+input,select,button,textarea{padding:10px;border-radius:10px;border:1px solid #e5e7eb;font-size:14px}
+button{background:var(--accent);color:#fff;font-weight:700;cursor:pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s ease; border: none;}
+button:hover{transform: translateY(-1px); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);}
+button i {color: white;}
+button.danger{background:var(--danger)}
+button.ghost{background:#e5e7eb;color:#111827}
+button.ghost i {color: #111827;}
+table{width:100%;border-collapse:collapse}
+th,td{padding:8px;border-bottom:1px solid #e5e7eb;text-align:left}
+th{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+th i {color: var(--muted);}
+.pill{display:inline-block;background:#eef2ff;border:1px solid #c7d2fe;border-radius:999px;padding:2px 8px;font-size:12px;color:#3730a3}
+
+/* Contenedor para tablas responsive */
+.table-container {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.table-container table {
+  min-width: 600px;
+}
+
+/* Mejoras para móvil */
+@media (max-width: 768px) {
+  .date-container {
+    width: 100%;
+    justify-content: center;
+    order: 2;
+  }
+  
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+  }
+  
+  header h1 {
+    order: 1;
+  }
+  
+  .calendar-modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 95%;
+    max-width: 350px;
+  }
+  
+  .month-grid,
+  .year-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  
+  #mesActualDisplay {
+    font-size: 1rem;
+  }
+  
+  .day-item {
+    padding: 8px 4px;
+    font-size: 0.8rem;
+    min-height: 35px;
+  }
+}
+
+@media(max-width:960px){
+  .grid2{grid-template-columns:1fr}
+  .sidebar{width: 70px; overflow: hidden;}
+  .sidebar h2 span, .sidebar li span {display: none;}
+  .sidebar h2 {justify-content: center;}
+  .sidebar li {justify-content: center; padding: 12px 8px;}
+  .sidebar-actions button span, .filebtn span {display: none;}
+  .sidebar-actions button, .filebtn {padding: 12px 8px;}
+}
+
+/* Estilos para mejorar la visualización de tablas en móvil */
+@media (max-width: 768px) {
+  table {
+    font-size: 14px;
+  }
+  
+  th, td {
+    padding: 6px 4px;
+  }
+  
+  .kpis {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .kpi .value {
+    font-size: 18px;
+  }
+}
+
+/* Mejoras visuales adicionales */
+.card h2 i {
+  width: 24px;
+  text-align: center;
+}
+
+/* Estilos para los iconos en diferentes contextos */
+.fas, .far, .fab {
+  font-style: normal;
+}
+
+/* Asegurar que todos los iconos tengan colores apropiados */
+.sidebar-actions .fa-file-export,
+.sidebar-actions .fa-file-pdf,
+.sidebar-actions .fa-file-import {
+  color: #0369a1;
+}
+
+.kpi .fa-money-bill-wave,
+.kpi .fa-receipt,
+.kpi .fa-credit-card,
+.kpi .fa-balance-scale {
+  color: var(--muted);
+}
