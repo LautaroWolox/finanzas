@@ -1,9 +1,44 @@
 // ======= Modelo de datos y helpers =======
-const STORAGE='finanzas_lautaro_v4';
-let DB_FILES; // IndexedDB for receipts
+const STORAGE='finanzas_lautaro_mobile';
+let DB_FILES;
 let state = JSON.parse(localStorage.getItem(STORAGE) || '{}');
 const $ = (sel,root=document)=>root.querySelector(sel);
 const fmt = n => new Intl.NumberFormat('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:2}).format(Number(n||0));
+
+// ======= MANEJO DE MÓVIL =======
+function initMobileMenu() {
+    const mobileMenuBtn = $('#mobileMenuBtn');
+    const sidebar = $('#sidebar');
+    const mobileOverlay = $('#mobileOverlay');
+    const mainContent = $('.content');
+    
+    function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        mobileOverlay.classList.toggle('active');
+        document.body.style.overflow = sidebar.classList.contains('active') ? 'hidden' : '';
+    }
+    
+    mobileMenuBtn.addEventListener('click', toggleSidebar);
+    mobileOverlay.addEventListener('click', toggleSidebar);
+    
+    // Cerrar sidebar al hacer clic en un item del menú (en móvil)
+    document.querySelectorAll('.sidebar li').forEach(li => {
+        li.addEventListener('click', () => {
+            if (window.innerWidth <= 768) {
+                toggleSidebar();
+            }
+        });
+    });
+    
+    // Cerrar sidebar al redimensionar a desktop
+    window.addEventListener('resize', () => {
+        if (window.innerWidth > 768) {
+            sidebar.classList.remove('active');
+            mobileOverlay.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+    });
+}
 
 // ======= SISTEMA DE CALENDARIO COMPLETO CON DÍAS =======
 let currentSelectedYear = new Date().getFullYear();
@@ -81,7 +116,7 @@ function initCalendar() {
             }
 
             yearElement.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevenir que el evento se propague
+                e.stopPropagation();
                 currentSelectedYear = year;
                 renderMonths();
                 showView(monthView);
@@ -109,7 +144,7 @@ function initCalendar() {
             }
 
             monthElement.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevenir que el evento se propague
+                e.stopPropagation();
                 currentSelectedMonth = index;
                 renderDays();
                 showView(dayView);
@@ -123,29 +158,25 @@ function initCalendar() {
     function renderDays() {
         currentMonthYear.textContent = `${monthsFull[currentSelectedMonth]} ${currentSelectedYear}`;
         
-        // Crear encabezados de días de la semana
         let weekDaysHTML = '<div class="week-days">';
         weekDays.forEach(day => {
             weekDaysHTML += `<div>${day}</div>`;
         });
         weekDaysHTML += '</div>';
 
-        // Crear grid de días
         const firstDay = new Date(currentSelectedYear, currentSelectedMonth, 1);
         const lastDay = new Date(currentSelectedYear, currentSelectedMonth + 1, 0);
         const daysInMonth = lastDay.getDate();
-        const startingDay = firstDay.getDay(); // 0 = Domingo, 1 = Lunes, etc.
+        const startingDay = firstDay.getDay();
 
         let daysHTML = '<div class="days-grid">';
 
-        // Días del mes anterior
         const prevMonthLastDay = new Date(currentSelectedYear, currentSelectedMonth, 0).getDate();
         for (let i = 0; i < startingDay; i++) {
             const day = prevMonthLastDay - (startingDay - 1 - i);
             daysHTML += `<div class="day-item other-month">${day}</div>`;
         }
 
-        // Días del mes actual
         const today = new Date();
         const isToday = (day) => {
             return day === today.getDate() && 
@@ -159,8 +190,7 @@ function initCalendar() {
             daysHTML += `<div class="day-item ${isTodayClass} ${isSelectedClass}" data-day="${day}">${day}</div>`;
         }
 
-        // Días del siguiente mes para completar la grid
-        const totalCells = 42; // 6 semanas * 7 días
+        const totalCells = 42;
         const remainingCells = totalCells - (startingDay + daysInMonth);
         for (let day = 1; day <= remainingCells; day++) {
             daysHTML += `<div class="day-item other-month">${day}</div>`;
@@ -169,19 +199,15 @@ function initCalendar() {
         daysHTML += '</div>';
         dayGrid.innerHTML = weekDaysHTML + daysHTML;
 
-        // Agregar event listeners a los días
         dayGrid.querySelectorAll('.day-item:not(.other-month)').forEach(dayElement => {
             dayElement.addEventListener('click', (e) => {
-                e.stopPropagation(); // Prevenir que el evento se propague
+                e.stopPropagation();
                 const day = parseInt(dayElement.getAttribute('data-day'));
                 currentSelectedDay = day;
                 
-                // Aquí podrías usar el día seleccionado si lo necesitas
-                // Por ahora solo actualizamos la selección visual
                 dayGrid.querySelectorAll('.day-item').forEach(d => d.classList.remove('selected'));
                 dayElement.classList.add('selected');
                 
-                // Cerrar modal y actualizar
                 updateMonthDisplay();
                 calendarModal.classList.remove('show');
                 renderKPIs();
@@ -194,7 +220,6 @@ function initCalendar() {
     }
 
     // ======= EVENT LISTENERS =======
-    // Navegación de décadas
     prevDecadeBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         currentDecade -= 10;
@@ -207,7 +232,6 @@ function initCalendar() {
         renderYears();
     });
 
-    // Navegación de años
     prevYearBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         currentSelectedYear--;
@@ -220,7 +244,6 @@ function initCalendar() {
         renderMonths();
     });
 
-    // Navegación de meses
     prevMonthBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         currentSelectedMonth--;
@@ -241,7 +264,6 @@ function initCalendar() {
         renderDays();
     });
 
-    // Borrar mes actual
     clearMonthBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (confirm('¿Estás seguro de que quieres borrar todos los datos de este mes?')) {
@@ -264,7 +286,6 @@ function initCalendar() {
         }
     });
 
-    // Abrir/cerrar modal
     dateContainer.addEventListener('click', (e) => {
         e.stopPropagation();
         calendarModal.classList.toggle('show');
@@ -274,14 +295,12 @@ function initCalendar() {
         }
     });
 
-    // Cerrar modal al hacer clic fuera
     document.addEventListener('click', (e) => {
         if (!dateContainer.contains(e.target) && !calendarModal.contains(e.target)) {
             calendarModal.classList.remove('show');
         }
     });
 
-    // Inicializar
     updateMonthDisplay();
     renderYears();
 }
@@ -291,7 +310,6 @@ function initFormCalendar(inputId) {
     const input = document.getElementById(inputId);
     const calendarId = `calendar-${inputId}`;
     
-    // Crear el modal del calendario si no existe
     if (!document.getElementById(calendarId)) {
         const calendarHTML = `
             <div class="form-calendar-modal" id="${calendarId}">
@@ -328,7 +346,6 @@ function initFormCalendar(inputId) {
     let currentYear = new Date().getFullYear();
     let currentMonth = new Date().getMonth();
     const monthsFull = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
-    const weekDays = ['D', 'L', 'M', 'X', 'J', 'V', 'S'];
     
     function renderFormCalendarDays() {
         monthYearDisplay.textContent = `${monthsFull[currentMonth]} ${currentYear}`;
@@ -340,14 +357,12 @@ function initFormCalendar(inputId) {
         
         let daysHTML = '';
         
-        // Días del mes anterior
         const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate();
         for (let i = 0; i < startingDay; i++) {
             const day = prevMonthLastDay - (startingDay - 1 - i);
             daysHTML += `<div class="form-day-item other-month">${day}</div>`;
         }
         
-        // Días del mes actual
         const today = new Date();
         const isToday = (day) => {
             return day === today.getDate() && 
@@ -366,7 +381,6 @@ function initFormCalendar(inputId) {
             daysHTML += `<div class="form-day-item ${isTodayClass} ${isSelectedClass}" data-day="${day}">${day}</div>`;
         }
         
-        // Días del siguiente mes
         const totalCells = 42;
         const remainingCells = totalCells - (startingDay + daysInMonth);
         for (let day = 1; day <= remainingCells; day++) {
@@ -375,7 +389,6 @@ function initFormCalendar(inputId) {
         
         daysGrid.innerHTML = daysHTML;
         
-        // Event listeners para los días
         daysGrid.querySelectorAll('.form-day-item:not(.other-month)').forEach(dayElement => {
             dayElement.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -391,7 +404,6 @@ function initFormCalendar(inputId) {
         });
     }
     
-    // Navegación
     prevMonthBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         currentMonth--;
@@ -412,10 +424,8 @@ function initFormCalendar(inputId) {
         renderFormCalendarDays();
     });
     
-    // Abrir/cerrar calendario
     input.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Cerrar otros calendarios
         document.querySelectorAll('.form-calendar-modal.show').forEach(modal => {
             if (modal.id !== calendarId) {
                 modal.classList.remove('show');
@@ -423,7 +433,6 @@ function initFormCalendar(inputId) {
         });
         calendarModal.classList.toggle('show');
         
-        // Si hay un valor en el input, mostrar ese mes
         if (input.value) {
             const date = new Date(input.value);
             currentYear = date.getFullYear();
@@ -433,14 +442,12 @@ function initFormCalendar(inputId) {
         renderFormCalendarDays();
     });
     
-    // Cerrar al hacer clic fuera
     document.addEventListener('click', (e) => {
         if (!input.contains(e.target) && !calendarModal.contains(e.target)) {
             calendarModal.classList.remove('show');
         }
     });
     
-    // Render inicial
     renderFormCalendarDays();
 }
 
@@ -531,17 +538,15 @@ async function downloadFile(id){
 
 // ======= Init =======
 (function init(){
-  // Inicializar calendario primero
+  initMobileMenu();
   initCalendar();
   
-  // menú
   document.querySelectorAll('.sidebar li').forEach(li=>li.addEventListener('click',()=>{
     document.querySelectorAll('.sidebar li').forEach(el=>el.classList.remove('active'));
     li.classList.add('active'); 
     render(li.dataset.section);
   }));
   
-  // export / import
   $('#btnExport').onclick = exportAll;
   $('#fileImport').onchange = importAll;
   $('#btnPDF').onclick = downloadPDF;
@@ -576,7 +581,7 @@ function render(id){
         <h2><i class="fas fa-money-bill-wave"></i> Sueldo del mes</h2>
         <form id="formSueldo">
           <label><i class="fas fa-dollar-sign"></i> Monto</label>
-          <input type="number" id="sueldoMonto" value="${m.sueldo||''}" placeholder="4000000"/>
+          <input type="number" id="sueldoMonto" value="${m.sueldo||''}" placeholder="4000000" inputmode="numeric"/>
           <button><i class="fas fa-save"></i> Guardar</button>
         </form>
       </div>`;
@@ -615,9 +620,9 @@ function renderGeneric(titulo,key,m,opciones){
         <label><i class="fas fa-tag"></i> Categoría</label>
         <select id="cat-${key}">${opciones.map(o=>`<option>${o}</option>`).join('')}</select>
         <label><i class="fas fa-align-left"></i> Descripción</label>
-        <input id="desc-${key}" placeholder="Detalle"/>
+        <input id="desc-${key}" placeholder="Detalle" />
         <label><i class="fas fa-dollar-sign"></i> Monto</label>
-        <input type="number" id="monto-${key}" />
+        <input type="number" id="monto-${key}" inputmode="decimal" />
         <label><i class="fas fa-calendar"></i> Fecha</label>
         <input type="date" id="fecha-${key}" class="form-calendar-input" />
         <label><i class="fas fa-credit-card"></i> Método de pago</label>
@@ -628,7 +633,7 @@ function renderGeneric(titulo,key,m,opciones){
           <option>Transferencia</option>
         </select>
         <label><i class="fas fa-file-upload"></i> Comprobante (PDF/Imagen)</label>
-        <input type="file" id="file-${key}" accept="application/pdf,image/*"/>
+        <input type="file" id="file-${key}" accept="application/pdf,image/*" />
         <button><i class="fas fa-plus"></i> Agregar</button>
       </form>
     </div>
@@ -639,12 +644,10 @@ function renderGeneric(titulo,key,m,opciones){
   </div>`;
   el.innerHTML = formHTML;
   
-  // Inicializar calendario para este formulario
   setTimeout(() => {
     initFormCalendar(`fecha-${key}`);
   }, 100);
   
-  // submit
   $(`#form-${key}`).onsubmit = async (e)=>{
     e.preventDefault();
     const cat=$(`#cat-${key}`).value; 
@@ -669,14 +672,12 @@ function renderGeneric(titulo,key,m,opciones){
     
     m[key].push(item);
     
-    // Ajuste tarjetas si corresponde
     if(pago.includes('Ciudad')) m.tarjetas.ciudad.utilizado += monto;
     if(pago.includes('Naranja')) m.tarjetas.naranja.utilizado += monto;
     
     save(); 
     drawTable(key,m[key]);
     
-    // reset rápido para seguir cargando
     $(`#desc-${key}`).value=''; 
     $(`#monto-${key}`).value=''; 
     $(`#file-${key}`).value='';
@@ -690,11 +691,10 @@ function renderGeneric(titulo,key,m,opciones){
 function drawTable(key,items){
   const cont = $(`#tabla-${key}`);
   if(!items || items.length===0){ 
-    cont.innerHTML='<p style="color:var(--muted)"><i class="fas fa-inbox"></i> Sin registros.</p>'; 
+    cont.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px"><i class="fas fa-inbox"></i> Sin registros.</p>'; 
     return; 
   }
   
-  // Ordenar por fecha (más reciente primero)
   const sortedItems = [...items].sort((a,b) => new Date(b.fecha) - new Date(a.fecha));
   
   cont.innerHTML = `
@@ -704,10 +704,8 @@ function drawTable(key,items){
           <tr>
             <th><i class="fas fa-tag"></i> Cat</th>
             <th><i class="fas fa-align-left"></i> Desc</th>
-            <th><i class="fas fa-credit-card"></i> Pago</th>
             <th><i class="fas fa-dollar-sign"></i> Monto</th>
             <th><i class="fas fa-calendar"></i> Fecha</th>
-            <th><i class="fas fa-file"></i> Recibo</th>
             <th><i class="fas fa-cog"></i> Acción</th>
           </tr>
         </thead>
@@ -716,20 +714,11 @@ function drawTable(key,items){
             <tr>
               <td><span class="pill">${it.cat}</span></td>
               <td>${it.desc}</td>
-              <td>${it.pago}</td>
               <td>${fmt(it.monto)}</td>
               <td>${it.fecha}</td>
               <td>
-                ${it.fileId ? 
-                  `<button class="ghost" onclick="downloadFile('${it.fileId}')">
-                    <i class="fas fa-download"></i> Descargar
-                  </button>` : 
-                  '—'
-                }
-              </td>
-              <td>
-                <button class="danger" onclick="deleteItem('${key}','${it.id}')">
-                  <i class="fas fa-trash"></i> Eliminar
+                <button class="danger" onclick="deleteItem('${key}','${it.id}')" style="padding:8px 12px;font-size:0.8rem">
+                  <i class="fas fa-trash"></i>
                 </button>
               </td>
             </tr>
@@ -745,7 +734,6 @@ function deleteItem(key,id){
   const idx = m[key].findIndex(x=>x.id===id); 
   if(idx<0) return;
   
-  // revert tarjetas
   const it = m[key][idx];
   if(it.pago?.includes('Ciudad')) m.tarjetas.ciudad.utilizado -= Number(it.monto||0);
   if(it.pago?.includes('Naranja')) m.tarjetas.naranja.utilizado -= Number(it.monto||0);
@@ -764,33 +752,33 @@ function renderTarjetas(m){
       <h2><i class="fas fa-credit-card"></i> Banco Ciudad</h2>
       <form id="form-ciudad">
         <label><i class="fas fa-chart-line"></i> Límite</label>
-        <input type="number" id="lim-ciudad" value="${m.tarjetas.ciudad.limite||0}"/>
+        <input type="number" id="lim-ciudad" value="${m.tarjetas.ciudad.limite||0}" inputmode="decimal"/>
         <label><i class="fas fa-exchange-alt"></i> Operación</label>
         <select id="op-ciudad">
           <option>Consumo</option>
           <option>Pago</option>
         </select>
         <label><i class="fas fa-dollar-sign"></i> Monto</label>
-        <input type="number" id="monto-ciudad"/>
+        <input type="number" id="monto-ciudad" inputmode="decimal"/>
         <button><i class="fas fa-save"></i> Guardar</button>
       </form>
-      <p><b>Utilizado:</b> ${fmt(m.tarjetas.ciudad.utilizado||0)} | <b>Disponible:</b> ${fmt((m.tarjetas.ciudad.limite||0)-(m.tarjetas.ciudad.utilizado||0))}</p>
+      <p style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;text-align:center"><b>Utilizado:</b> ${fmt(m.tarjetas.ciudad.utilizado||0)}<br><b>Disponible:</b> ${fmt((m.tarjetas.ciudad.limite||0)-(m.tarjetas.ciudad.utilizado||0))}</p>
     </div>
     <div class="card">
       <h2><i class="fas fa-credit-card"></i> Naranja X</h2>
       <form id="form-naranja">
         <label><i class="fas fa-chart-line"></i> Límite</label>
-        <input type="number" id="lim-naranja" value="${m.tarjetas.naranja.limite||0}"/>
+        <input type="number" id="lim-naranja" value="${m.tarjetas.naranja.limite||0}" inputmode="decimal"/>
         <label><i class="fas fa-exchange-alt"></i> Operación</label>
         <select id="op-naranja">
           <option>Consumo</option>
           <option>Pago</option>
         </select>
         <label><i class="fas fa-dollar-sign"></i> Monto</label>
-        <input type="number" id="monto-naranja"/>
+        <input type="number" id="monto-naranja" inputmode="decimal"/>
         <button><i class="fas fa-save"></i> Guardar</button>
       </form>
-      <p><b>Utilizado:</b> ${fmt(m.tarjetas.naranja.utilizado||0)} | <b>Disponible:</b> ${fmt((m.tarjetas.naranja.limite||0)-(m.tarjetas.naranja.utilizado||0))}</p>
+      <p style="margin-top:16px;padding:12px;background:#f8fafc;border-radius:8px;text-align:center"><b>Utilizado:</b> ${fmt(m.tarjetas.naranja.utilizado||0)}<br><b>Disponible:</b> ${fmt((m.tarjetas.naranja.limite||0)-(m.tarjetas.naranja.utilizado||0))}</p>
     </div>
   </div>
   <div class="card">
@@ -798,7 +786,6 @@ function renderTarjetas(m){
     <div id="tabla-tarjetas"></div>
   </div>`;
 
-  // handlers
   $('#form-ciudad').onsubmit=(e)=>{
     e.preventDefault();
     m.tarjetas.ciudad.limite = Number($('#lim-ciudad').value||0);
@@ -855,7 +842,7 @@ function drawMovs(m){
   const cont = $('#tabla-tarjetas');
   
   if(items.length===0){ 
-    cont.innerHTML='<p style="color:var(--muted)"><i class="fas fa-inbox"></i> Sin movimientos.</p>'; 
+    cont.innerHTML='<p style="color:var(--muted);text-align:center;padding:20px"><i class="fas fa-inbox"></i> Sin movimientos.</p>'; 
     return; 
   }
   
@@ -897,64 +884,38 @@ function renderResumen(m){
   $('#mainSection').innerHTML = `
     <div class="card">
       <h2><i class="fas fa-chart-bar"></i> Balance del mes</h2>
-      <p><i class="fas fa-money-bill-wave"></i> Ingresos (sueldo): <b>${fmt(m.sueldo||0)}</b></p>
-      <p><i class="fas fa-receipt"></i> Gastos: <b>${fmt(gastos)}</b></p>
-      <p><i class="fas fa-credit-card"></i> Tarjetas (utilizado): <b>${fmt(tarjetasUsado)}</b></p>
-      <p style="font-size:20px;margin-top:8px">
-        <i class="fas fa-balance-scale"></i> Resultado: <b>${fmt((m.sueldo||0)-gastos-tarjetasUsado)}</b>
-      </p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:8px">
+          <span><i class="fas fa-money-bill-wave"></i> Ingresos:</span>
+          <b>${fmt(m.sueldo||0)}</b>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:8px">
+          <span><i class="fas fa-receipt"></i> Gastos:</span>
+          <b>${fmt(gastos)}</b>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px;background:#f8fafc;border-radius:8px">
+          <span><i class="fas fa-credit-card"></i> Tarjetas:</span>
+          <b>${fmt(tarjetasUsado)}</b>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:16px;background:${(m.sueldo||0)-gastos-tarjetasUsado >= 0 ? '#dcfce7' : '#fee2e2'};border-radius:8px;border:2px solid ${(m.sueldo||0)-gastos-tarjetasUsado >= 0 ? '#22c55e' : '#ef4444'}">
+          <span><i class="fas fa-balance-scale"></i> Resultado:</span>
+          <b style="color:${(m.sueldo||0)-gastos-tarjetasUsado >= 0 ? '#22c55e' : '#ef4444'};font-size:1.2rem">${fmt((m.sueldo||0)-gastos-tarjetasUsado)}</b>
+        </div>
+      </div>
     </div>
     <div class="card">
       <h2><i class="fas fa-chart-pie"></i> Gastos por categoría</h2>
-      ${byCat.map(([k,v])=>`
-        <div class="pill" style="margin:4px;display:inline-block">
-          <i class="fas fa-folder"></i> ${k}: <b>${fmt(v)}</b>
-        </div>
-      `).join('') || '<p><i class="fas fa-inbox"></i> Sin gastos</p>'}
-    </div>
-    <div class="card">
-      <h2><i class="fas fa-history"></i> Últimos Gastos</h2>
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th><i class="fas fa-tag"></i> Categoría</th>
-              <th><i class="fas fa-align-left"></i> Descripción</th>
-              <th><i class="fas fa-dollar-sign"></i> Monto</th>
-              <th><i class="fas fa-calendar"></i> Fecha</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${[
-              ...m.servicios.map(s=>({...s, categoria:'Servicios'})),
-              ...m.mama.map(s=>({...s, categoria:'Mamá'})),
-              ...m.delivery.map(s=>({...s, categoria:'Delivery'})),
-              ...m.transporte.map(s=>({...s, categoria:'Transporte'})),
-              ...m.mascotas.map(s=>({...s, categoria:'Mascotas'})),
-              ...m.salud.map(s=>({...s, categoria:'Salud'})),
-              ...m.deportes.map(s=>({...s, categoria:'Deportes'})),
-              ...m.salidas.map(s=>({...s, categoria:'Salidas'})),
-              ...m.cochera.map(s=>({...s, categoria:'Cochera'})),
-              ...m.lucy.map(s=>({...s, categoria:'Lucy'})),
-              ...m.cristina.map(s=>({...s, categoria:'Cristina'}))
-            ]
-            .sort((a,b)=>new Date(b.fecha) - new Date(a.fecha))
-            .slice(0,10)
-            .map(g=>`
-              <tr>
-                <td><span class="pill">${g.categoria}</span></td>
-                <td>${g.desc}</td>
-                <td>${fmt(g.monto)}</td>
-                <td>${g.fecha}</td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">
+        ${byCat.filter(([,v])=>v>0).map(([k,v])=>`
+          <div class="pill" style="margin:4px">
+            <i class="fas fa-folder"></i> ${k}: <b>${fmt(v)}</b>
+          </div>
+        `).join('') || '<p style="color:var(--muted);text-align:center;width:100%"><i class="fas fa-inbox"></i> Sin gastos</p>'}
       </div>
     </div>`;
 }
 
-// ======= Export/Import (incluye recibos IDB) =======
+// ======= Export/Import =======
 async function exportAll(){
   const db = await idb();
   const tx = db.transaction('files','readonly');
@@ -991,108 +952,6 @@ async function importAll(e){
   render('resumen');
 }
 
-// ======= PDF (multipágina, texto) =======
-function escapePDF(text) {
-  return String(text).replace(/\\/g, '\\\\').replace(/\(/g, '\\(').replace(/\)/g, '\\)');
-}
-
-function buildReportLines() {
-  const k = ensureMonth(),
-    m = state[k];
-  const lines = [];
-  lines.push(`REPORTE MENSUAL — ${k}`);
-  lines.push('');
-  lines.push(`Sueldo: ${fmt(m.sueldo || 0)}`);
-  const keys = ['servicios', 'mama', 'delivery', 'transporte', 'mascotas', 'salud', 'deportes', 'salidas', 'cochera', 'lucy', 'cristina'];
-  let totalG = 0;
-  keys.forEach(key => {
-    const subtotal = m[key].reduce((a, b) => a + Number(b.monto), 0);
-    totalG += subtotal;
-    lines.push(`- ${key.toUpperCase()}: ${fmt(subtotal)}`);
-  });
-  const tUsado = (m.tarjetas.ciudad.utilizado || 0) + (m.tarjetas.naranja.utilizado || 0);
-  lines.push(`Tarjetas (utilizado): ${fmt(tUsado)}`);
-  lines.push(`Balance: ${fmt((m.sueldo || 0) - totalG - tUsado)}`);
-  lines.push('');
-  keys.forEach(key => {
-    lines.push(`=== Detalle ${key} ===`);
-    if (m[key].length === 0) lines.push('  (sin registros)');
-    m[key].forEach(it => lines.push(`  ${it.fecha} | ${it.cat} | ${it.pago} | ${fmt(it.monto)} | ${it.desc}`));
-    lines.push('');
-  });
-  lines.push('=== Tarjetas ===');
-  ['ciudad', 'naranja'].forEach(t => {
-    const card = m.tarjetas[t];
-    lines.push(
-      `  ${t === 'ciudad' ? 'Banco Ciudad' : 'Naranja X'} — Límite ${fmt(card.limite || 0)} — Utilizado ${fmt(card.utilizado || 0)} — Disponible ${fmt(
-        (card.limite || 0) - (card.utilizado || 0),
-      )}`,
-    );
-    if (card.movimientos.length === 0) lines.push('    (sin movimientos)');
-    card.movimientos.forEach(mv => lines.push(`    ${mv.fecha} | ${mv.op} | ${fmt(mv.monto)}`));
-  });
-  return lines;
-}
-
 function downloadPDF() {
-  const lines = buildReportLines();
-
-  const pageWidth = 595,
-    pageHeight = 842;
-  const margin = 50,
-    lineH = 14,
-    startY = pageHeight - margin;
-  const maxLines = Math.floor((pageHeight - 2 * margin) / lineH);
-  const pages = [];
-  for (let i = 0; i < lines.length; i += maxLines) pages.push(lines.slice(i, i + maxLines));
-
-  let pdf = '%PDF-1.4\n';
-  const offsets = [];
-  const addObj = s => {
-    offsets.push(pdf.length);
-    pdf += s;
-  };
-
-  // 3: Font
-  addObj('3 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n');
-
-  const pageNums = [];
-  const contentNums = [];
-  let next = 4;
-
-  for (const pageLines of pages) {
-    const ops =
-      'BT\n' + '/F1 12 Tf\n' + `${margin} ${startY} Td\n` + `${lineH} TL\n` + pageLines.map(l => `(${escapePDF(l)}) Tj T*`).join('\n') + '\nET';
-    const content = `${next} 0 obj\n<< /Length ${ops.length} >>\nstream\n${ops}\nendstream\nendobj\n`;
-    addObj(content);
-    contentNums.push(next);
-    next++;
-    const pageObj = `${next} 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${pageWidth} ${pageHeight}] /Resources << /Font << /F1 3 0 R >> >> /Contents ${
-      contentNums[contentNums.length - 1]
-    } 0 R >>\nendobj\n`;
-    addObj(pageObj);
-    pageNums.push(next);
-    next++;
-  }
-
-  // 2: Pages
-  const kids = pageNums.map(n => `${n} 0 R`).join(' ');
-  addObj(`2 0 obj\n<< /Type /Pages /Kids [ ${kids} ] /Count ${pageNums.length} >>\nendobj\n`);
-
-  // 1: Catalog
-  addObj('1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n');
-
-  // xref
-  const xrefStart = pdf.length;
-  const totalObjs = 1 + offsets.length; // include object 0
-  let xref = `xref\n0 ${totalObjs}\n0000000000 65535 f \n`;
-  for (const off of offsets) xref += `${String(off).padStart(10, '0')} 00000 n \n`;
-  const trailer = `trailer\n<< /Size ${totalObjs} /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF`;
-  pdf += xref + trailer;
-
-  const blob = new Blob([pdf], { type: 'application/pdf' });
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `reporte_${monthKey()}.pdf`;
-  a.click();
+  alert('Función PDF en desarrollo para móvil');
 }
