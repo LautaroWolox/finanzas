@@ -597,7 +597,7 @@ function render(id){
   if(id==='mascotas') return renderGeneric('🐶 Mascotas','mascotas', m, ['Alimento perros','Vet','Accesorios']);
   if(id==='salud') return renderGeneric('🧠 Salud Mental','salud', m, ['Psicóloga Lautaro','Psiquiatra Lautaro','Terapia de pareja']);
   if(id==='deportes') return renderGeneric('🏋️ Deportes','deportes', m, ['Pádel','Gimnasio']);
-  if(id==='salidas') return renderGeneric('🎬 Salidas','salidas', m, ['Boliche','Restaurante','Bar','Evento','Otro']);
+  if(id==='salidas') return renderGeneric('🎬 Salidas','salidas', m, ['Cine','Restaurante','Bar','Evento','Otro']);
   if(id==='cochera') return renderGeneric('🅿️ Pago Cochera','cochera', m, ['Cochera Mensual']);
   if(id==='lucy') return renderGeneric('👩 Pago Lucy','lucy', m, ['Pago Lucy']);
   if(id==='cristina') return renderGeneric('👩 Pago Cristina','cristina', m, ['Pago Cristina']);
