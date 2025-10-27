@@ -1,0 +1,330 @@
+<div class="form-container">
+  <h2><i class="fas fa-user"></i> Cristina</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="cristinaFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="cristinaFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="cristinaMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="cristinaMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="cristinaConcepto"><i class="fas fa-tag"></i> Concepto</label>
+      <select id="cristinaConcepto">
+        <option value="pago_mensual">Pago Mensual</option>
+        <option value="extra">Pago Extra</option>
+        <option value="bonificacion">Bonificación</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="cristinaComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="cristinaComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="cristinaFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="cristinaFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="cristinaNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="cristinaNotas" placeholder="Detalles adicionales..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveCristina" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Pago
+    </button>
+    <button type="button" id="clearCristina" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Pagos</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="cristinaTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Pagos Realizados</h4>
+        <div class="summary-amount" id="cristinaCount">0</div>
+      </div>
+    </div>
+    <div id="cristinaRecords" class="records-list"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeCristinaForm();
+});
+
+function initializeCristinaForm() {
+  // Inicializar calendario
+  if (typeof initFormCalendar === 'function') {
+    initFormCalendar('cristinaFecha');
+  }
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('cristinaFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('cristinaFileBtn');
+  const fileInput = document.getElementById('cristinaComprobante');
+  const fileName = document.getElementById('cristinaFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      if (typeof handleFileInput === 'function') {
+        handleFileInput(fileInput, function(file) {
+          if (fileName) fileName.textContent = file.name;
+        });
+      } else {
+        fileInput.click();
+      }
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar pago
+  const saveBtn = document.getElementById('saveCristina');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveCristinaRecord);
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearCristina');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearCristinaForm);
+  }
+  
+  // Cargar registros existentes
+  loadCristinaRecords();
+}
+
+function saveCristinaRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('cristinaFecha').value;
+  const montoInput = document.getElementById('cristinaMonto');
+  const monto = parseFloat(montoInput.value);
+  const concepto = document.getElementById('cristinaConcepto').value;
+  const notas = document.getElementById('cristinaNotas').value;
+  const fileInput = document.getElementById('cristinaComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0 || isNaN(monto)) {
+    alert('Por favor ingrese un monto válido');
+    montoInput.focus();
+    return;
+  }
+  
+  if (!state[k].cristina) state[k].cristina = [];
+  
+  const record = {
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
+    fecha: fecha,
+    monto: monto,
+    concepto: concepto,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    if (typeof storeFile === 'function') {
+      storeFile(file).then(fileId => {
+        record.comprobanteId = fileId;
+        record.comprobanteNombre = file.name;
+        completeSaveCristina(record, k);
+      }).catch(error => {
+        console.error('Error guardando archivo:', error);
+        completeSaveCristina(record, k);
+      });
+    } else {
+      record.comprobanteNombre = file.name;
+      completeSaveCristina(record, k);
+    }
+  } else {
+    completeSaveCristina(record, k);
+  }
+}
+
+function completeSaveCristina(record, k) {
+  state[k].cristina.push(record);
+  save();
+  
+  alert('Pago a Cristina guardado correctamente');
+  loadCristinaRecords();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
+  clearCristinaForm();
+}
+
+function loadCristinaRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('cristinaRecords');
+  const totalElement = document.getElementById('cristinaTotal');
+  const countElement = document.getElementById('cristinaCount');
+  
+  if (!recordsContainer) return;
+  
+  const records = state[k].cristina || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  if (totalElement) totalElement.textContent = fmt(total);
+  if (countElement) countElement.textContent = records.length;
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay pagos a Cristina registrados este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.concepto}">${getConceptoText(record.concepto)}</span>
+          ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadCristinaFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteCristinaRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteCristinaRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este pago a Cristina?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].cristina.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].cristina.splice(index, 1);
+    save();
+    loadCristinaRecords();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
+    alert('Pago eliminado correctamente');
+  }
+}
+
+function downloadCristinaFile(fileId) {
+  if (typeof downloadFile === 'function') {
+    downloadFile(fileId);
+  } else {
+    alert('Función de descarga no disponible');
+  }
+}
+
+function clearCristinaForm() {
+  const fechaInput = document.getElementById('cristinaFecha');
+  const montoInput = document.getElementById('cristinaMonto');
+  const conceptoSelect = document.getElementById('cristinaConcepto');
+  const notasInput = document.getElementById('cristinaNotas');
+  const fileName = document.getElementById('cristinaFileName');
+  const fileInput = document.getElementById('cristinaComprobante');
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '';
+  if (conceptoSelect) conceptoSelect.value = 'pago_mensual';
+  if (notasInput) notasInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  if (fechaInput) fechaInput.value = today;
+}
+
+function getConceptoText(concepto) {
+  const conceptos = {
+    'pago_mensual': 'Pago Mensual',
+    'extra': 'Pago Extra',
+    'bonificacion': 'Bonificación',
+    'otros': 'Otros'
+  };
+  return conceptos[concepto] || concepto;
+}
+
+function formatDate(dateString) {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+</script>
+
+<style>
+.record-categoria.pago_mensual { background: #1dd1a1; color: white; }
+.record-categoria.extra { background: #feca57; color: #000; }
+.record-categoria.bonificacion { background: #54a0ff; color: white; }
+.record-categoria.otros { background: #c8d6e5; color: #222f3e; }
+</style>

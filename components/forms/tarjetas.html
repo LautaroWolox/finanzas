@@ -1,0 +1,745 @@
+<div class="form-container">
+  <h2><i class="fas fa-credit-card"></i> Tarjetas de Crédito</h2>
+  
+  <div class="form-tabs">
+    <button class="tab-btn active" data-tab="ciudad">Banco Ciudad</button>
+    <button class="tab-btn" data-tab="naranja">Naranja X</button>
+    <button class="tab-btn" data-tab="resumen">Resumen Tarjetas</button>
+  </div>
+  
+  <!-- TAB BANCO CIUDAD -->
+  <div id="ciudadTab" class="tab-content active">
+    <div class="tarjeta-info">
+      <div class="tarjeta-header">
+        <h3><i class="fas fa-credit-card"></i> Banco Ciudad</h3>
+        <div class="tarjeta-stats">
+          <div class="stat">
+            <span class="stat-label">Límite:</span>
+            <span class="stat-value" id="ciudadLimite">$0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Utilizado:</span>
+            <span class="stat-value" id="ciudadUtilizado">$0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Disponible:</span>
+            <span class="stat-value available" id="ciudadDisponible">$0</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="ciudadFecha"><i class="fas fa-calendar"></i> Fecha</label>
+          <input type="date" id="ciudadFecha" class="form-calendar-input">
+        </div>
+        
+        <div class="form-group">
+          <label for="ciudadTipo"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
+          <select id="ciudadTipo">
+            <option value="consumo">Consumo</option>
+            <option value="pago">Pago</option>
+            <option value="ajuste">Ajuste</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="ciudadMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+          <input type="number" id="ciudadMonto" placeholder="0.00" step="0.01" min="0">
+        </div>
+        
+        <div class="form-group">
+          <label for="ciudadDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+          <input type="text" id="ciudadDescripcion" placeholder="Descripción del movimiento">
+        </div>
+        
+        <div class="form-group">
+          <label for="ciudadComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+          <div class="file-input-container">
+            <input type="file" id="ciudadComprobante" accept="image/*,.pdf" style="display:none">
+            <button type="button" id="ciudadFileBtn" class="file-btn">
+              <i class="fas fa-camera"></i> Subir Comprobante
+            </button>
+            <span id="ciudadFileName" class="file-name">No seleccionado</span>
+          </div>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="ciudadNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+          <textarea id="ciudadNotas" placeholder="Detalles adicionales..." rows="2"></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" id="saveCiudad" class="btn-primary">
+          <i class="fas fa-save"></i> Guardar Movimiento
+        </button>
+        <button type="button" id="clearCiudad" class="btn-secondary">
+          <i class="fas fa-broom"></i> Limpiar
+        </button>
+      </div>
+      
+      <div class="records-section">
+        <h4><i class="fas fa-list"></i> Movimientos Banco Ciudad</h4>
+        <div id="ciudadRecords" class="records-list">
+          <!-- Los registros se cargarán dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- TAB NARANJA X -->
+  <div id="naranjaTab" class="tab-content">
+    <div class="tarjeta-info">
+      <div class="tarjeta-header">
+        <h3><i class="fas fa-credit-card"></i> Naranja X</h3>
+        <div class="tarjeta-stats">
+          <div class="stat">
+            <span class="stat-label">Límite:</span>
+            <span class="stat-value" id="naranjaLimite">$0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Utilizado:</span>
+            <span class="stat-value" id="naranjaUtilizado">$0</span>
+          </div>
+          <div class="stat">
+            <span class="stat-label">Disponible:</span>
+            <span class="stat-value available" id="naranjaDisponible">$0</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="naranjaFecha"><i class="fas fa-calendar"></i> Fecha</label>
+          <input type="date" id="naranjaFecha" class="form-calendar-input">
+        </div>
+        
+        <div class="form-group">
+          <label for="naranjaTipo"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
+          <select id="naranjaTipo">
+            <option value="consumo">Consumo</option>
+            <option value="pago">Pago</option>
+            <option value="ajuste">Ajuste</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="naranjaMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+          <input type="number" id="naranjaMonto" placeholder="0.00" step="0.01" min="0">
+        </div>
+        
+        <div class="form-group">
+          <label for="naranjaDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+          <input type="text" id="naranjaDescripcion" placeholder="Descripción del movimiento">
+        </div>
+        
+        <div class="form-group">
+          <label for="naranjaComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+          <div class="file-input-container">
+            <input type="file" id="naranjaComprobante" accept="image/*,.pdf" style="display:none">
+            <button type="button" id="naranjaFileBtn" class="file-btn">
+              <i class="fas fa-camera"></i> Subir Comprobante
+            </button>
+            <span id="naranjaFileName" class="file-name">No seleccionado</span>
+          </div>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="naranjaNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+          <textarea id="naranjaNotas" placeholder="Detalles adicionales..." rows="2"></textarea>
+        </div>
+      </div>
+      
+      <div class="form-actions">
+        <button type="button" id="saveNaranja" class="btn-primary">
+          <i class="fas fa-save"></i> Guardar Movimiento
+        </button>
+        <button type="button" id="clearNaranja" class="btn-secondary">
+          <i class="fas fa-broom"></i> Limpiar
+        </button>
+      </div>
+      
+      <div class="records-section">
+        <h4><i class="fas fa-list"></i> Movimientos Naranja X</h4>
+        <div id="naranjaRecords" class="records-list">
+          <!-- Los registros se cargarán dinámicamente -->
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- TAB RESUMEN -->
+  <div id="resumenTab" class="tab-content">
+    <div class="resumen-tarjetas">
+      <h3><i class="fas fa-chart-pie"></i> Resumen General de Tarjetas</h3>
+      
+      <div class="summary-cards">
+        <div class="summary-card">
+          <h4>Total Utilizado</h4>
+          <div class="summary-amount" id="totalUtilizado">$0</div>
+        </div>
+        <div class="summary-card">
+          <h4>Total Límite</h4>
+          <div class="summary-amount" id="totalLimite">$0</div>
+        </div>
+        <div class="summary-card">
+          <h4>Disponible Total</h4>
+          <div class="summary-amount available" id="totalDisponible">$0</div>
+        </div>
+        <div class="summary-card">
+          <h4>Utilización</h4>
+          <div class="summary-amount" id="porcentajeUtilizacion">0%</div>
+        </div>
+      </div>
+      
+      <div class="chart-container">
+        <canvas id="tarjetasChart" width="400" height="200"></canvas>
+      </div>
+      
+      <div class="movimientos-combinados">
+        <h4><i class="fas fa-stream"></i> Todos los Movimientos</h4>
+        <div id="todosMovimientos" class="records-list">
+          <!-- Movimientos combinados se cargarán aquí -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar tabs
+  initTabs();
+  
+  // Inicializar calendarios
+  initFormCalendar('ciudadFecha');
+  initFormCalendar('naranjaFecha');
+  
+  // Configurar fechas actuales por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('ciudadFecha').value = today;
+  document.getElementById('naranjaFecha').value = today;
+  
+  // Configurar eventos para Banco Ciudad
+  setupTarjetaEvents('ciudad');
+  
+  // Configurar eventos para Naranja X
+  setupTarjetaEvents('naranja');
+  
+  // Cargar datos iniciales
+  loadTarjetasData();
+});
+
+function initTabs() {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      // Remover active de todos
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+      
+      // Agregar active al clickeado
+      this.classList.add('active');
+      document.getElementById(this.dataset.tab + 'Tab').classList.add('active');
+      
+      // Si es el tab de resumen, actualizar datos
+      if (this.dataset.tab === 'resumen') {
+        updateResumenTarjetas();
+      }
+    });
+  });
+}
+
+function setupTarjetaEvents(tarjeta) {
+  // Manejar subida de archivos
+  document.getElementById(tarjeta + 'FileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById(tarjeta + 'Comprobante'), function(file) {
+      document.getElementById(tarjeta + 'FileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById(tarjeta + 'Comprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById(tarjeta + 'FileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar movimiento
+  document.getElementById('save' + tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)).addEventListener('click', function() {
+    saveTarjetaRecord(tarjeta);
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clear' + tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)).addEventListener('click', function() {
+    clearTarjetaForm(tarjeta);
+  });
+}
+
+function saveTarjetaRecord(tarjeta) {
+  const k = ensureMonth();
+  const fecha = document.getElementById(tarjeta + 'Fecha').value;
+  const tipo = document.getElementById(tarjeta + 'Tipo').value;
+  const monto = parseFloat(document.getElementById(tarjeta + 'Monto').value);
+  const descripcion = document.getElementById(tarjeta + 'Descripcion').value;
+  const notas = document.getElementById(tarjeta + 'Notas').value;
+  const fileInput = document.getElementById(tarjeta + 'Comprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!descripcion.trim()) {
+    alert('Por favor ingrese una descripción');
+    return;
+  }
+  
+  // Inicializar estructura si no existe
+  if (!state[k].tarjetas) state[k].tarjetas = {};
+  if (!state[k].tarjetas[tarjeta]) {
+    state[k].tarjetas[tarjeta] = {
+      limite: 0,
+      utilizado: 0,
+      movimientos: []
+    };
+  }
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    tipo: tipo,
+    monto: monto,
+    descripcion: descripcion,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Actualizar saldo según el tipo de movimiento
+  if (tipo === 'consumo') {
+    state[k].tarjetas[tarjeta].utilizado += monto;
+  } else if (tipo === 'pago') {
+    state[k].tarjetas[tarjeta].utilizado = Math.max(0, state[k].tarjetas[tarjeta].utilizado - monto);
+  }
+  // Los ajustes no modifican el utilizado
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveTarjeta(record, tarjeta, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveTarjeta(record, tarjeta, k);
+    });
+  } else {
+    completeSaveTarjeta(record, tarjeta, k);
+  }
+}
+
+function completeSaveTarjeta(record, tarjeta, k) {
+  state[k].tarjetas[tarjeta].movimientos.push(record);
+  save();
+  
+  alert('Movimiento guardado correctamente');
+  loadTarjetasData();
+  renderKPIs();
+  clearTarjetaForm(tarjeta);
+}
+
+function loadTarjetasData() {
+  loadTarjetaData('ciudad');
+  loadTarjetaData('naranja');
+}
+
+function loadTarjetaData(tarjeta) {
+  const k = ensureMonth();
+  const tarjetaData = state[k].tarjetas?.[tarjeta] || { limite: 0, utilizado: 0, movimientos: [] };
+  const recordsContainer = document.getElementById(tarjeta + 'Records');
+  
+  // Actualizar estadísticas
+  document.getElementById(tarjeta + 'Limite').textContent = fmt(tarjetaData.limite || 0);
+  document.getElementById(tarjeta + 'Utilizado').textContent = fmt(tarjetaData.utilizado || 0);
+  
+  const disponible = (tarjetaData.limite || 0) - (tarjetaData.utilizado || 0);
+  document.getElementById(tarjeta + 'Disponible').textContent = fmt(disponible);
+  
+  // Cargar movimientos
+  const movimientos = tarjetaData.movimientos || [];
+  
+  if (movimientos.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay movimientos para esta tarjeta</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedMovimientos = [...movimientos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedMovimientos.map(mov => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(mov.fecha)}</span>
+          <span class="record-amount ${mov.tipo}">${fmt(mov.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${mov.tipo}">${getTipoText(mov.tipo)}</span>
+          <span class="record-desc">${mov.descripcion}</span>
+          ${mov.notas ? `<span class="record-notes">${mov.notas}</span>` : ''}
+          ${mov.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${mov.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${mov.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadTarjetaFile('${mov.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteTarjetaMovimiento('${tarjeta}', '${mov.id}')" title="Eliminar movimiento">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteTarjetaMovimiento(tarjeta, id) {
+  if (!confirm('¿Está seguro de que desea eliminar este movimiento?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const movimientos = state[k].tarjetas?.[tarjeta]?.movimientos || [];
+  const index = movimientos.findIndex(mov => mov.id === id);
+  
+  if (index !== -1) {
+    const movimiento = movimientos[index];
+    
+    // Revertir el efecto en el saldo utilizado
+    if (movimiento.tipo === 'consumo') {
+      state[k].tarjetas[tarjeta].utilizado -= movimiento.monto;
+    } else if (movimiento.tipo === 'pago') {
+      state[k].tarjetas[tarjeta].utilizado += movimiento.monto;
+    }
+    
+    state[k].tarjetas[tarjeta].movimientos.splice(index, 1);
+    save();
+    loadTarjetasData();
+    renderKPIs();
+    alert('Movimiento eliminado correctamente');
+  }
+}
+
+function downloadTarjetaFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearTarjetaForm(tarjeta) {
+  document.getElementById(tarjeta + 'Fecha').value = '';
+  document.getElementById(tarjeta + 'Tipo').value = 'consumo';
+  document.getElementById(tarjeta + 'Monto').value = '';
+  document.getElementById(tarjeta + 'Descripcion').value = '';
+  document.getElementById(tarjeta + 'Notas').value = '';
+  document.getElementById(tarjeta + 'FileName').textContent = 'No seleccionado';
+  document.getElementById(tarjeta + 'Comprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById(tarjeta + 'Fecha').value = today;
+}
+
+function updateResumenTarjetas() {
+  const k = ensureMonth();
+  const ciudad = state[k].tarjetas?.ciudad || { limite: 0, utilizado: 0 };
+  const naranja = state[k].tarjetas?.naranja || { limite: 0, utilizado: 0 };
+  
+  const totalLimite = (ciudad.limite || 0) + (naranja.limite || 0);
+  const totalUtilizado = (ciudad.utilizado || 0) + (naranja.utilizado || 0);
+  const totalDisponible = totalLimite - totalUtilizado;
+  const porcentajeUtilizacion = totalLimite > 0 ? (totalUtilizado / totalLimite * 100).toFixed(1) : 0;
+  
+  document.getElementById('totalLimite').textContent = fmt(totalLimite);
+  document.getElementById('totalUtilizado').textContent = fmt(totalUtilizado);
+  document.getElementById('totalDisponible').textContent = fmt(totalDisponible);
+  document.getElementById('porcentajeUtilizacion').textContent = porcentajeUtilizacion + '%';
+  
+  // Cargar movimientos combinados
+  loadMovimientosCombinados();
+  
+  // Actualizar gráfico
+  updateTarjetasChart(ciudad, naranja);
+}
+
+function loadMovimientosCombinados() {
+  const k = ensureMonth();
+  const ciudadMovs = state[k].tarjetas?.ciudad?.movimientos || [];
+  const naranjaMovs = state[k].tarjetas?.naranja?.movimientos || [];
+  
+  const todosMovimientos = [
+    ...ciudadMovs.map(mov => ({ ...mov, tarjeta: 'Banco Ciudad' })),
+    ...naranjaMovs.map(mov => ({ ...mov, tarjeta: 'Naranja X' }))
+  ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  const container = document.getElementById('todosMovimientos');
+  
+  if (todosMovimientos.length === 0) {
+    container.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay movimientos en ninguna tarjeta</p>
+      </div>
+    `;
+    return;
+  }
+  
+  container.innerHTML = todosMovimientos.map(mov => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(mov.fecha)}</span>
+          <span class="record-amount ${mov.tipo}">${fmt(mov.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${mov.tipo}">${getTipoText(mov.tipo)}</span>
+          <span class="record-tarjeta">${mov.tarjeta}</span>
+          <span class="record-desc">${mov.descripcion}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateTarjetasChart(ciudad, naranja) {
+  const canvas = document.getElementById('tarjetasChart');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  const ciudadUtilizado = ciudad.utilizado || 0;
+  const naranjaUtilizado = naranja.utilizado || 0;
+  const ciudadDisponible = (ciudad.limite || 0) - ciudadUtilizado;
+  const naranjaDisponible = (naranja.limite || 0) - naranjaUtilizado;
+  
+  if (ciudadUtilizado === 0 && naranjaUtilizado === 0) {
+    ctx.font = '16px Arial';
+    ctx.fillStyle = '#666';
+    ctx.textAlign = 'center';
+    ctx.fillText('No hay datos para mostrar', canvas.width / 2, canvas.height / 2);
+    return;
+  }
+  
+  // Dibujar gráfico de barras simple
+  const barWidth = 80;
+  const spacing = 40;
+  const startX = 50;
+  const maxHeight = 150;
+  
+  const maxValue = Math.max(ciudadUtilizado + ciudadDisponible, naranjaUtilizado + naranjaDisponible);
+  const scale = maxHeight / maxValue;
+  
+  // Banco Ciudad
+  const ciudadUtilizadoHeight = ciudadUtilizado * scale;
+  const ciudadDisponibleHeight = ciudadDisponible * scale;
+  
+  // Barra utilizada
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(startX, maxHeight - ciudadUtilizadoHeight, barWidth, ciudadUtilizadoHeight);
+  
+  // Barra disponible
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(startX, maxHeight - ciudadUtilizadoHeight - ciudadDisponibleHeight, barWidth, ciudadDisponibleHeight);
+  
+  // Etiqueta
+  ctx.fillStyle = '#333';
+  ctx.font = '12px Arial';
+  ctx.fillText('Ciudad', startX + barWidth/2 - 15, maxHeight + 20);
+  
+  // Naranja X
+  const naranjaUtilizadoHeight = naranjaUtilizado * scale;
+  const naranjaDisponibleHeight = naranjaDisponible * scale;
+  
+  // Barra utilizada
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(startX + barWidth + spacing, maxHeight - naranjaUtilizadoHeight, barWidth, naranjaUtilizadoHeight);
+  
+  // Barra disponible
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(startX + barWidth + spacing, maxHeight - naranjaUtilizadoHeight - naranjaDisponibleHeight, barWidth, naranjaDisponibleHeight);
+  
+  // Etiqueta
+  ctx.fillText('Naranja', startX + barWidth + spacing + barWidth/2 - 20, maxHeight + 20);
+  
+  // Leyenda
+  ctx.fillStyle = '#ef4444';
+  ctx.fillRect(50, 10, 15, 15);
+  ctx.fillStyle = '#333';
+  ctx.fillText('Utilizado', 70, 20);
+  
+  ctx.fillStyle = '#22c55e';
+  ctx.fillRect(150, 10, 15, 15);
+  ctx.fillStyle = '#333';
+  ctx.fillText('Disponible', 170, 20);
+}
+
+function getTipoText(tipo) {
+  const tipos = {
+    'consumo': 'Consumo',
+    'pago': 'Pago',
+    'ajuste': 'Ajuste'
+  };
+  return tipos[tipo] || tipo;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>
+
+<style>
+.tarjeta-info {
+  background: #f8fafc;
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.tarjeta-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.tarjeta-stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stat {
+  text-align: center;
+  padding: 10px 15px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-bottom: 5px;
+}
+
+.stat-value {
+  display: block;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.stat-value.available {
+  color: #22c55e;
+}
+
+.record-amount.consumo {
+  color: #ef4444;
+}
+
+.record-amount.pago {
+  color: #22c55e;
+}
+
+.record-categoria.consumo {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.record-categoria.pago {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+.record-categoria.ajuste {
+  background: #fafafa;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.record-tarjeta {
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.chart-container {
+  margin: 20px 0;
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.movimientos-combinados {
+  margin-top: 30px;
+}
+
+.summary-cards.mini {
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.summary-cards.mini .summary-card {
+  padding: 15px;
+}
+
+.summary-cards.mini .summary-amount {
+  font-size: 1.4rem;
+}
+
+@media (max-width: 768px) {
+  .tarjeta-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .tarjeta-stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .stat {
+    flex: 1;
+    min-width: 100px;
+  }
+}
+</style>

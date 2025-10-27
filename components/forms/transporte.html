@@ -1,0 +1,366 @@
+<div class="form-container">
+  <h2><i class="fas fa-car"></i> Transporte</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="transporteFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="transporteFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="transporteMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="transporteMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="transporteTipo"><i class="fas fa-bus"></i> Tipo de Transporte</label>
+      <select id="transporteTipo">
+        <option value="uber">Uber</option>
+        <option value="didi">DiDi</option>
+        <option value="sube">SUBE</option>
+        <option value="taxi">Taxi</option>
+        <option value="colectivo">Colectivo</option>
+        <option value="combustible">Combustible</option>
+        <option value="estacionamiento">Estacionamiento</option>
+        <option value="mantenimiento">Mantenimiento</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="transporteOrigen"><i class="fas fa-map-marker-alt"></i> Origen</label>
+      <input type="text" id="transporteOrigen" placeholder="Lugar de origen">
+    </div>
+    
+    <div class="form-group">
+      <label for="transporteDestino"><i class="fas fa-flag-checkered"></i> Destino</label>
+      <input type="text" id="transporteDestino" placeholder="Lugar de destino">
+    </div>
+    
+    <div class="form-group">
+      <label for="transporteDistancia"><i class="fas fa-road"></i> Distancia (km)</label>
+      <input type="number" id="transporteDistancia" placeholder="0" step="0.1" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="transporteComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="transporteComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="transporteFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="transporteFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="transporteNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="transporteNotas" placeholder="Detalles adicionales..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveTransporte" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Gasto
+    </button>
+    <button type="button" id="clearTransporte" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Transporte</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="transporteTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Cantidad de Viajes</h4>
+        <div class="summary-amount" id="transporteCount">0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Distancia Total</h4>
+        <div class="summary-amount" id="transporteDistanciaTotal">0 km</div>
+      </div>
+    </div>
+    <div id="transporteRecords" class="records-list">
+      <!-- Los registros se cargarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar calendario
+  initFormCalendar('transporteFecha');
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('transporteFecha').value = today;
+  
+  // Manejar subida de archivos
+  document.getElementById('transporteFileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById('transporteComprobante'), function(file) {
+      document.getElementById('transporteFileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById('transporteComprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById('transporteFileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar gasto
+  document.getElementById('saveTransporte').addEventListener('click', function() {
+    saveTransporteRecord();
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clearTransporte').addEventListener('click', function() {
+    clearTransporteForm();
+  });
+  
+  // Cargar registros existentes
+  loadTransporteRecords();
+});
+
+function saveTransporteRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('transporteFecha').value;
+  const monto = parseFloat(document.getElementById('transporteMonto').value);
+  const tipo = document.getElementById('transporteTipo').value;
+  const origen = document.getElementById('transporteOrigen').value;
+  const destino = document.getElementById('transporteDestino').value;
+  const distancia = parseFloat(document.getElementById('transporteDistancia').value) || 0;
+  const notas = document.getElementById('transporteNotas').value;
+  const fileInput = document.getElementById('transporteComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!state[k].transporte) state[k].transporte = [];
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    monto: monto,
+    tipo: tipo,
+    origen: origen,
+    destino: destino,
+    distancia: distancia,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveTransporte(record, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveTransporte(record, k);
+    });
+  } else {
+    completeSaveTransporte(record, k);
+  }
+}
+
+function completeSaveTransporte(record, k) {
+  state[k].transporte.push(record);
+  save();
+  
+  alert('Gasto de transporte guardado correctamente');
+  loadTransporteRecords();
+  renderKPIs();
+  clearTransporteForm();
+}
+
+function loadTransporteRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('transporteRecords');
+  const records = state[k].transporte || [];
+  
+  // Calcular estadísticas
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  const distanciaTotal = records.reduce((sum, record) => sum + (record.distancia || 0), 0);
+  
+  document.getElementById('transporteTotal').textContent = fmt(total);
+  document.getElementById('transporteCount').textContent = records.length;
+  document.getElementById('transporteDistanciaTotal').textContent = distanciaTotal.toFixed(1) + ' km';
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay gastos de transporte este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.tipo}">${getTipoText(record.tipo)}</span>
+          ${record.origen || record.destino ? `
+            <span class="record-ruta">
+              ${record.origen || '?'} → ${record.destino || '?'}
+              ${record.distancia ? `(${record.distancia} km)` : ''}
+            </span>
+          ` : ''}
+          ${record.notas ? `<span class="record-notes">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadTransporteFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteTransporteRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteTransporteRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este gasto de transporte?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].transporte.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].transporte.splice(index, 1);
+    save();
+    loadTransporteRecords();
+    renderKPIs();
+    alert('Gasto eliminado correctamente');
+  }
+}
+
+function downloadTransporteFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearTransporteForm() {
+  document.getElementById('transporteFecha').value = '';
+  document.getElementById('transporteMonto').value = '';
+  document.getElementById('transporteTipo').value = 'uber';
+  document.getElementById('transporteOrigen').value = '';
+  document.getElementById('transporteDestino').value = '';
+  document.getElementById('transporteDistancia').value = '';
+  document.getElementById('transporteNotas').value = '';
+  document.getElementById('transporteFileName').textContent = 'No seleccionado';
+  document.getElementById('transporteComprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('transporteFecha').value = today;
+}
+
+function getTipoText(tipo) {
+  const tipos = {
+    'uber': 'Uber',
+    'didi': 'DiDi',
+    'sube': 'SUBE',
+    'taxi': 'Taxi',
+    'colectivo': 'Colectivo',
+    'combustible': 'Combustible',
+    'estacionamiento': 'Estacionamiento',
+    'mantenimiento': 'Mantenimiento',
+    'otros': 'Otros'
+  };
+  return tipos[tipo] || tipo;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>
+
+<style>
+.record-ruta {
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.record-categoria.uber {
+  background: #000000;
+  color: white;
+}
+
+.record-categoria.didi {
+  background: #f7b500;
+  color: #000000;
+}
+
+.record-categoria.sube {
+  background: #00a2ff;
+  color: white;
+}
+
+.record-categoria.taxi {
+  background: #ff9f43;
+  color: #000000;
+}
+
+.record-categoria.colectivo {
+  background: #ee5253;
+  color: white;
+}
+
+.record-categoria.combustible {
+  background: #ff9ff3;
+  color: #000000;
+}
+
+.record-categoria.estacionamiento {
+  background: #54a0ff;
+  color: white;
+}
+
+.record-categoria.mantenimiento {
+  background: #5f27cd;
+  color: white;
+}
+
+.record-categoria.otros {
+  background: #c8d6e5;
+  color: #222f3e;
+}
+</style>

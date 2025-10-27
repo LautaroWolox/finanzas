@@ -1,0 +1,382 @@
+<div class="form-container">
+  <h2><i class="fas fa-hamburger"></i> PedidosYa y Delivery</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="deliveryFecha"><i class="fas fa-calendar"></i> Fecha del Pedido</label>
+      <input type="date" id="deliveryFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="deliveryMonto"><i class="fas fa-dollar-sign"></i> Monto Total</label>
+      <input type="number" id="deliveryMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="deliveryApp"><i class="fas fa-mobile-alt"></i> Aplicación</label>
+      <select id="deliveryApp">
+        <option value="pedidosya">PedidosYa</option>
+        <option value="rappi">Rappi</option>
+        <option value="glovo">Glovo</option>
+        <option value="otros">Otra App</option>
+        <option value="directo">Directo al Local</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="deliveryRestaurante"><i class="fas fa-utensils"></i> Restaurante/Local</label>
+      <input type="text" id="deliveryRestaurante" placeholder="Nombre del restaurante">
+    </div>
+    
+    <div class="form-group">
+      <label for="deliveryPropina"><i class="fas fa-hand-holding-usd"></i> Propina</label>
+      <input type="number" id="deliveryPropina" placeholder="0.00" step="0.01" min="0" value="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="deliveryEnvio"><i class="fas fa-shipping-fast"></i> Costo de Envío</label>
+      <input type="number" id="deliveryEnvio" placeholder="0.00" step="0.01" min="0" value="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="deliveryComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="deliveryComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="deliveryFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="deliveryFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="deliveryItems"><i class="fas fa-list"></i> Items del Pedido</label>
+      <textarea id="deliveryItems" placeholder="Lista de productos pedidos..." rows="3"></textarea>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="deliveryNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="deliveryNotas" placeholder="Detalles adicionales..." rows="2"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveDelivery" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Pedido
+    </button>
+    <button type="button" id="clearDelivery" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Pedidos</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="deliveryTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Cantidad de Pedidos</h4>
+        <div class="summary-amount" id="deliveryCount">0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Promedio por Pedido</h4>
+        <div class="summary-amount" id="deliveryPromedio">$0</div>
+      </div>
+    </div>
+    <div id="deliveryRecords" class="records-list">
+      <!-- Los registros se cargarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar calendario
+  initFormCalendar('deliveryFecha');
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('deliveryFecha').value = today;
+  
+  // Calcular total automáticamente
+  document.getElementById('deliveryMonto').addEventListener('input', calcularTotalDelivery);
+  document.getElementById('deliveryPropina').addEventListener('input', calcularTotalDelivery);
+  document.getElementById('deliveryEnvio').addEventListener('input', calcularTotalDelivery);
+  
+  // Manejar subida de archivos
+  document.getElementById('deliveryFileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById('deliveryComprobante'), function(file) {
+      document.getElementById('deliveryFileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById('deliveryComprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById('deliveryFileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar pedido
+  document.getElementById('saveDelivery').addEventListener('click', function() {
+    saveDeliveryRecord();
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clearDelivery').addEventListener('click', function() {
+    clearDeliveryForm();
+  });
+  
+  // Cargar registros existentes
+  loadDeliveryRecords();
+});
+
+function calcularTotalDelivery() {
+  const monto = parseFloat(document.getElementById('deliveryMonto').value) || 0;
+  const propina = parseFloat(document.getElementById('deliveryPropina').value) || 0;
+  const envio = parseFloat(document.getElementById('deliveryEnvio').value) || 0;
+  
+  const total = monto + propina + envio;
+  
+  // Actualizar display si es necesario
+  if (total > 0) {
+    document.getElementById('deliveryMonto').value = total.toFixed(2);
+  }
+}
+
+function saveDeliveryRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('deliveryFecha').value;
+  const monto = parseFloat(document.getElementById('deliveryMonto').value);
+  const app = document.getElementById('deliveryApp').value;
+  const restaurante = document.getElementById('deliveryRestaurante').value;
+  const propina = parseFloat(document.getElementById('deliveryPropina').value) || 0;
+  const envio = parseFloat(document.getElementById('deliveryEnvio').value) || 0;
+  const items = document.getElementById('deliveryItems').value;
+  const notas = document.getElementById('deliveryNotas').value;
+  const fileInput = document.getElementById('deliveryComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!restaurante.trim()) {
+    alert('Por favor ingrese el nombre del restaurante');
+    return;
+  }
+  
+  if (!state[k].delivery) state[k].delivery = [];
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    monto: monto,
+    app: app,
+    restaurante: restaurante,
+    propina: propina,
+    envio: envio,
+    items: items,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveDelivery(record, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveDelivery(record, k);
+    });
+  } else {
+    completeSaveDelivery(record, k);
+  }
+}
+
+function completeSaveDelivery(record, k) {
+  state[k].delivery.push(record);
+  save();
+  
+  alert('Pedido guardado correctamente');
+  loadDeliveryRecords();
+  renderKPIs();
+  clearDeliveryForm();
+}
+
+function loadDeliveryRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('deliveryRecords');
+  const records = state[k].delivery || [];
+  
+  // Calcular estadísticas
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  const promedio = records.length > 0 ? total / records.length : 0;
+  
+  document.getElementById('deliveryTotal').textContent = fmt(total);
+  document.getElementById('deliveryCount').textContent = records.length;
+  document.getElementById('deliveryPromedio').textContent = fmt(promedio);
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay pedidos registrados este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.app}">${getAppText(record.app)}</span>
+          <span class="record-restaurante">${record.restaurante}</span>
+          ${record.items ? `<span class="record-items">${record.items}</span>` : ''}
+          ${(record.propina > 0 || record.envio > 0) ? `
+            <span class="record-detalles">
+              ${record.propina > 0 ? `Propina: ${fmt(record.propina)}` : ''}
+              ${record.envio > 0 ? `Envío: ${fmt(record.envio)}` : ''}
+            </span>
+          ` : ''}
+          ${record.notas ? `<span class="record-notes">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadDeliveryFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteDeliveryRecord('${record.id}')" title="Eliminar pedido">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteDeliveryRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este pedido?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].delivery.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].delivery.splice(index, 1);
+    save();
+    loadDeliveryRecords();
+    renderKPIs();
+    alert('Pedido eliminado correctamente');
+  }
+}
+
+function downloadDeliveryFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearDeliveryForm() {
+  document.getElementById('deliveryFecha').value = '';
+  document.getElementById('deliveryMonto').value = '';
+  document.getElementById('deliveryApp').value = 'pedidosya';
+  document.getElementById('deliveryRestaurante').value = '';
+  document.getElementById('deliveryPropina').value = '0';
+  document.getElementById('deliveryEnvio').value = '0';
+  document.getElementById('deliveryItems').value = '';
+  document.getElementById('deliveryNotas').value = '';
+  document.getElementById('deliveryFileName').textContent = 'No seleccionado';
+  document.getElementById('deliveryComprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('deliveryFecha').value = today;
+}
+
+function getAppText(app) {
+  const apps = {
+    'pedidosya': 'PedidosYa',
+    'rappi': 'Rappi',
+    'glovo': 'Glovo',
+    'otros': 'Otra App',
+    'directo': 'Directo'
+  };
+  return apps[app] || app;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>
+
+<style>
+.record-restaurante {
+  font-weight: 600;
+  color: #111827;
+}
+
+.record-items {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.record-detalles {
+  display: flex;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.record-categoria.pedidosya {
+  background: #ff6b6b;
+  color: white;
+}
+
+.record-categoria.rappi {
+  background: #00d2d3;
+  color: white;
+}
+
+.record-categoria.glovo {
+  background: #ff9ff3;
+  color: white;
+}
+
+.record-categoria.otros {
+  background: #c8d6e5;
+  color: #222f3e;
+}
+
+.record-categoria.directo {
+  background: #feca57;
+  color: #222f3e;
+}
+</style>

@@ -1,0 +1,385 @@
+<div class="form-container">
+  <h2><i class="fas fa-user"></i> Lucy</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="lucyFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="lucyFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="lucyMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="lucyMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="lucyConcepto"><i class="fas fa-tag"></i> Concepto</label>
+      <select id="lucyConcepto" disabled>
+        <option value="pago_mensual">Pago Mensual - Transferencia</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="lucyMetodoPago"><i class="fas fa-money-bill-wave"></i> Método de Pago</label>
+      <select id="lucyMetodoPago" disabled>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="lucyComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="lucyComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="lucyFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="lucyFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="lucyNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="lucyNotas" placeholder="Detalles adicionales del pago..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveLucy" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Pago
+    </button>
+    <button type="button" id="clearLucy" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Pagos a Lucy</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="lucyTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Pagos Realizados</h4>
+        <div class="summary-amount" id="lucyCount">0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Próximo Pago</h4>
+        <div class="summary-amount" id="lucyProximo">-</div>
+      </div>
+    </div>
+    <div id="lucyRecords" class="records-list"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeLucyForm();
+});
+
+function initializeLucyForm() {
+  // Inicializar calendario
+  if (typeof initFormCalendar === 'function') {
+    initFormCalendar('lucyFecha');
+  }
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('lucyFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('lucyFileBtn');
+  const fileInput = document.getElementById('lucyComprobante');
+  const fileName = document.getElementById('lucyFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      if (typeof handleFileInput === 'function') {
+        handleFileInput(fileInput, function(file) {
+          if (fileName) fileName.textContent = file.name;
+        });
+      } else {
+        fileInput.click();
+      }
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar pago
+  const saveBtn = document.getElementById('saveLucy');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveLucyRecord);
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearLucy');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearLucyForm);
+  }
+  
+  // Cargar registros existentes
+  loadLucyRecords();
+}
+
+function saveLucyRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('lucyFecha').value;
+  const montoInput = document.getElementById('lucyMonto');
+  const monto = parseFloat(montoInput.value);
+  const concepto = document.getElementById('lucyConcepto').value;
+  const metodoPago = document.getElementById('lucyMetodoPago').value;
+  const notas = document.getElementById('lucyNotas').value;
+  const fileInput = document.getElementById('lucyComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0 || isNaN(monto)) {
+    alert('Por favor ingrese un monto válido');
+    montoInput.focus();
+    return;
+  }
+  
+  if (!state[k].lucy) state[k].lucy = [];
+  
+  const record = {
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
+    fecha: fecha,
+    monto: monto,
+    concepto: concepto,
+    metodoPago: metodoPago,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    if (typeof storeFile === 'function') {
+      storeFile(file).then(fileId => {
+        record.comprobanteId = fileId;
+        record.comprobanteNombre = file.name;
+        completeSaveLucy(record, k);
+      }).catch(error => {
+        console.error('Error guardando archivo:', error);
+        completeSaveLucy(record, k);
+      });
+    } else {
+      record.comprobanteNombre = file.name;
+      completeSaveLucy(record, k);
+    }
+  } else {
+    completeSaveLucy(record, k);
+  }
+}
+
+function completeSaveLucy(record, k) {
+  state[k].lucy.push(record);
+  save();
+  
+  alert('Pago a Lucy guardado correctamente');
+  loadLucyRecords();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
+  clearLucyForm();
+}
+
+function loadLucyRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('lucyRecords');
+  const totalElement = document.getElementById('lucyTotal');
+  const countElement = document.getElementById('lucyCount');
+  const proximoElement = document.getElementById('lucyProximo');
+  
+  if (!recordsContainer) return;
+  
+  const records = state[k].lucy || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  if (totalElement) totalElement.textContent = fmt(total);
+  if (countElement) countElement.textContent = records.length;
+  
+  // Calcular próximo pago (primer día del próximo mes)
+  const today = new Date();
+  const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, 1);
+  const proximoPago = nextMonth.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+  if (proximoElement) proximoElement.textContent = proximoPago;
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay pagos a Lucy registrados este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.concepto}">${getConceptoText(record.concepto)}</span>
+          <span class="record-metodo-pago ${record.metodoPago}">${getMetodoPagoText(record.metodoPago)}</span>
+          ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadLucyFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteLucyRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteLucyRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este pago a Lucy?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].lucy.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].lucy.splice(index, 1);
+    save();
+    loadLucyRecords();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
+    alert('Pago eliminado correctamente');
+  }
+}
+
+function downloadLucyFile(fileId) {
+  if (typeof downloadFile === 'function') {
+    downloadFile(fileId);
+  } else {
+    alert('Función de descarga no disponible');
+  }
+}
+
+function clearLucyForm() {
+  const fechaInput = document.getElementById('lucyFecha');
+  const montoInput = document.getElementById('lucyMonto');
+  const notasInput = document.getElementById('lucyNotas');
+  const fileName = document.getElementById('lucyFileName');
+  const fileInput = document.getElementById('lucyComprobante');
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '';
+  if (notasInput) notasInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  if (fechaInput) fechaInput.value = today;
+}
+
+function getConceptoText(concepto) {
+  const conceptos = {
+    'pago_mensual': 'Pago Mensual'
+  };
+  return conceptos[concepto] || concepto;
+}
+
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
+}
+
+function formatDate(dateString) {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+</script>
+
+<style>
+.record-metodo-pago {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago.transferencia { 
+  background: #5f27cd; 
+  color: white; 
+}
+
+.record-categoria.pago_mensual { 
+  background: #1dd1a1; 
+  color: white; 
+}
+
+.summary-cards.mini .summary-card {
+  padding: 15px;
+}
+
+.summary-cards.mini .summary-amount {
+  font-size: 1.2rem;
+}
+
+/* Estilos para campos deshabilitados */
+select:disabled {
+  background-color: #f8f9fa;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+select:disabled option {
+  color: #6c757d;
+}
+</style>

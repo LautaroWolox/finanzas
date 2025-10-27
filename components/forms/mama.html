@@ -1,0 +1,282 @@
+<div class="form-container">
+  <h2><i class="fas fa-female"></i> Gastos de Mamá</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="mamaFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="mamaFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="mamaMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="mamaMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="mamaCategoria"><i class="fas fa-tag"></i> Categoría</label>
+      <select id="mamaCategoria">
+        <option value="claro">Claro</option>
+        <option value="flow">Flow</option>
+        <option value="luz">Luz</option>
+        <option value="transferencia">Transferencia</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="mamaDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+      <input type="text" id="mamaDescripcion" placeholder="Descripción del gasto">
+    </div>
+    
+    <div class="form-group">
+      <label for="mamaComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="mamaComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="mamaFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="mamaFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="mamaNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="mamaNotas" placeholder="Detalles adicionales..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveMama" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Gasto
+    </button>
+    <button type="button" id="clearMama" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Gastos</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="mamaTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Cantidad de Gastos</h4>
+        <div class="summary-amount" id="mamaCount">0</div>
+      </div>
+    </div>
+    <div id="mamaRecords" class="records-list">
+      <!-- Los registros se cargarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar calendario
+  initFormCalendar('mamaFecha');
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('mamaFecha').value = today;
+  
+  // Manejar subida de archivos
+  document.getElementById('mamaFileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById('mamaComprobante'), function(file) {
+      document.getElementById('mamaFileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById('mamaComprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById('mamaFileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar gasto
+  document.getElementById('saveMama').addEventListener('click', function() {
+    saveMamaRecord();
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clearMama').addEventListener('click', function() {
+    clearMamaForm();
+  });
+  
+  // Cargar registros existentes
+  loadMamaRecords();
+});
+
+function saveMamaRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('mamaFecha').value;
+  const monto = parseFloat(document.getElementById('mamaMonto').value);
+  const categoria = document.getElementById('mamaCategoria').value;
+  const descripcion = document.getElementById('mamaDescripcion').value;
+  const notas = document.getElementById('mamaNotas').value;
+  const fileInput = document.getElementById('mamaComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!descripcion.trim()) {
+    alert('Por favor ingrese una descripción');
+    return;
+  }
+  
+  if (!state[k].mama) state[k].mama = [];
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    monto: monto,
+    categoria: categoria,
+    descripcion: descripcion,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveMama(record, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveMama(record, k);
+    });
+  } else {
+    completeSaveMama(record, k);
+  }
+}
+
+function completeSaveMama(record, k) {
+  state[k].mama.push(record);
+  save();
+  
+  alert('Gasto guardado correctamente');
+  loadMamaRecords();
+  renderKPIs();
+  clearMamaForm();
+}
+
+function loadMamaRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('mamaRecords');
+  const records = state[k].mama || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  document.getElementById('mamaTotal').textContent = fmt(total);
+  document.getElementById('mamaCount').textContent = records.length;
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay gastos registrados para mamá este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.categoria}">${getCategoriaText(record.categoria)}</span>
+          <span class="record-desc">${record.descripcion}</span>
+          ${record.notas ? `<span class="record-notes">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadMamaFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteMamaRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteMamaRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este gasto?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].mama.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].mama.splice(index, 1);
+    save();
+    loadMamaRecords();
+    renderKPIs();
+    alert('Gasto eliminado correctamente');
+  }
+}
+
+function downloadMamaFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearMamaForm() {
+  document.getElementById('mamaFecha').value = '';
+  document.getElementById('mamaMonto').value = '';
+  document.getElementById('mamaCategoria').value = 'claro';
+  document.getElementById('mamaDescripcion').value = '';
+  document.getElementById('mamaNotas').value = '';
+  document.getElementById('mamaFileName').textContent = 'No seleccionado';
+  document.getElementById('mamaComprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('mamaFecha').value = today;
+}
+
+function getCategoriaText(categoria) {
+  const categorias = {
+    'claro': 'Claro',
+    'flow': 'Flow',
+    'luz': 'Luz',
+    'transferencia': 'Transferencia',
+    'otros': 'Otros'
+  };
+  return categorias[categoria] || categoria;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>

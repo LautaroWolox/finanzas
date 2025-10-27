@@ -1,0 +1,151 @@
+:root {
+  --bg: #f6f7fb;
+  --panel: #fff;
+  --text: #111827;
+  --muted: #6b7280;
+  --brand: #0ea5e9;
+  --accent: #3b82f6;
+  --danger: #ef4444;
+  --ok: #22c55e;
+  --radius: 12px;
+  --shadow: 0 10px 30px rgba(0,0,0,.08);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Segoe UI, Roboto, sans-serif;
+  color: var(--text);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  line-height: 1.5;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.login-container {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-card {
+  background: var(--panel);
+  padding: 40px 30px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+
+.login-header {
+  margin-bottom: 30px;
+}
+
+.login-header i {
+  font-size: 3rem;
+  color: var(--brand);
+  margin-bottom: 15px;
+}
+
+.login-header h1 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.login-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.input-group {
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.input-group i {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 15px 15px 15px 45px;
+  border-radius: var(--radius);
+  border: 1px solid #e5e7eb;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.input-group input:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+#loginBtn {
+  width: 100%;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 16px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  margin-bottom: 20px;
+}
+
+#loginBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.3);
+}
+
+#loginBtn i {
+  color: white;
+}
+
+.login-info {
+  background: #f8fafc;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--muted);
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.login-info i {
+  color: var(--brand);
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 30px 20px;
+  }
+  
+  .login-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .input-group input {
+    padding: 14px 14px 14px 40px;
+  }
+}

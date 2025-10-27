@@ -11,32 +11,8 @@
   <div class="mobile-overlay" id="mobileOverlay"></div>
   
   <div class="container">
-    <aside class="sidebar" id="sidebar">
-      <h2><i class="fas fa-chart-pie"></i> Finanzas</h2>
-      <nav>
-        <ul id="menu">
-          <li data-section="sueldo" class="active"><i class="fas fa-money-bill-wave"></i> <span>Sueldo</span></li>
-          <li data-section="servicios"><i class="fas fa-home"></i> <span>Servicios Hogar</span></li>
-          <li data-section="mama"><i class="fas fa-female"></i> <span>Mamá</span></li>
-          <li data-section="tarjetas"><i class="fas fa-credit-card"></i> <span>Tarjetas</span></li>
-          <li data-section="delivery"><i class="fas fa-hamburger"></i> <span>PedidosYa</span></li>
-          <li data-section="transporte"><i class="fas fa-car"></i> <span>Transporte</span></li>
-          <li data-section="mascotas"><i class="fas fa-paw"></i> <span>Mascotas</span></li>
-          <li data-section="salud"><i class="fas fa-brain"></i> <span>Salud Mental</span></li>
-          <li data-section="deportes"><i class="fas fa-dumbbell"></i> <span>Deportes</span></li>
-          <li data-section="salidas"><i class="fas fa-film"></i> <span>Salidas</span></li>
-          <li data-section="cochera"><i class="fas fa-parking"></i> <span>Cochera</span></li>
-          <li data-section="lucy"><i class="fas fa-user"></i> <span>Lucy</span></li>
-          <li data-section="cristina"><i class="fas fa-user"></i> <span>Cristina</span></li>
-          <li data-section="resumen"><i class="fas fa-chart-bar"></i> <span>Resumen</span></li>
-        </ul>
-      </nav>
-      <div class="sidebar-actions">
-        <button id="btnExport"><i class="fas fa-file-export"></i> Exportar JSON</button>
-        <button id="btnPDF"><i class="fas fa-file-pdf"></i> Descargar PDF</button>
-        <label class="filebtn"><i class="fas fa-file-import"></i> Importar <input id="fileImport" type="file" accept="application/json" /></label>
-      </div>
-    </aside>
+    <!-- Menú cargado desde componente -->
+    <div id="menu-container"></div>
 
     <main class="content">
       <header>
@@ -47,39 +23,12 @@
         <div class="date-container">
           <i class="fas fa-calendar-alt"></i>
           <span id="mesActualDisplay">Cargando...</span>
-          <div class="calendar-modal" id="calendarModal">
-            <div class="calendar-view" id="yearView">
-              <div class="calendar-header">
-                <button class="calendar-nav" id="prevDecade"><i class="fas fa-chevron-left"></i></button>
-                <span class="calendar-year-range" id="yearRange">2020-2029</span>
-                <button class="calendar-nav" id="nextDecade"><i class="fas fa-chevron-right"></i></button>
-              </div>
-              <div class="year-grid" id="yearGrid"></div>
-            </div>
-
-            <div class="calendar-view" id="monthView" style="display: none;">
-              <div class="calendar-header">
-                <button class="calendar-nav" id="prevYear"><i class="fas fa-chevron-left"></i></button>
-                <span class="calendar-year" id="currentYear">2025</span>
-                <button class="calendar-nav" id="nextYear"><i class="fas fa-chevron-right"></i></button>
-              </div>
-              <div class="month-grid" id="monthGrid"></div>
-            </div>
-
-            <div class="calendar-view" id="dayView" style="display: none;">
-              <div class="calendar-header">
-                <button class="calendar-nav" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-                <span class="calendar-month-year" id="currentMonthYear">Enero 2025</span>
-                <button class="calendar-nav" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
-              </div>
-              <div class="day-grid" id="dayGrid"></div>
-            </div>
-
-            <div class="calendar-actions">
-              <button class="calendar-btn danger" id="clearMonth"><i class="fas fa-trash"></i> Borrar Este Mes</button>
-            </div>
-          </div>
+          <!-- Calendario cargado desde componente -->
+          <div id="calendar-container"></div>
         </div>
+        <button id="logoutBtn" class="logout-btn">
+          <i class="fas fa-sign-out-alt"></i> Salir
+        </button>
       </header>
 
       <input type="hidden" id="mesActual" />
@@ -107,6 +56,10 @@
     </main>
   </div>
 
+  <!-- Cargar todos los scripts -->
+  <script src="js/calendar.js"></script>
+  <script src="js/forms.js"></script>
+  <script src="js/pdf-export.js"></script>
   <script src="js/app.js"></script>
 </body>
 </html>

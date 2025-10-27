@@ -1,0 +1,462 @@
+<div class="form-container">
+  <h2><i class="fas fa-dumbbell"></i> Deportes</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="deportesFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="deportesFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="deportesMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="deportesMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="deportesActividad"><i class="fas fa-running"></i> Actividad</label>
+      <select id="deportesActividad">
+        <option value="padel_semanal">Pádel - Pago Semanal</option>
+        <option value="gimnasio_mensual">Gimnasio - Pago Mensual</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="deportesLugar"><i class="fas fa-map-marker-alt"></i> Lugar/Club</label>
+      <input type="text" id="deportesLugar" placeholder="Nombre del lugar o club">
+    </div>
+    
+    <div class="form-group">
+      <label for="deportesMetodoPago"><i class="fas fa-credit-card"></i> Método de Pago</label>
+      <select id="deportesMetodoPago">
+        <option value="efectivo">Efectivo</option>
+        <option value="debito">Débito</option>
+        <option value="credito">Crédito</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="deportesComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="deportesComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="deportesFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="deportesFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="deportesNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="deportesNotas" placeholder="Detalles adicionales..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveDeportes" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Gasto
+    </button>
+    <button type="button" id="clearDeportes" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Gastos Deportivos</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="deportesTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Cantidad de Gastos</h4>
+        <div class="summary-amount" id="deportesCount">0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Por Actividad</h4>
+        <div class="summary-amount" id="deportesActividadTotal">$0</div>
+      </div>
+    </div>
+    <div id="deportesRecords" class="records-list"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeDeportesForm();
+});
+
+function initializeDeportesForm() {
+  // Inicializar calendario
+  if (typeof initFormCalendar === 'function') {
+    initFormCalendar('deportesFecha');
+  }
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('deportesFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Configurar lugar automáticamente según actividad seleccionada
+  const actividadSelect = document.getElementById('deportesActividad');
+  const lugarInput = document.getElementById('deportesLugar');
+  
+  if (actividadSelect && lugarInput) {
+    actividadSelect.addEventListener('change', function() {
+      const actividad = this.value;
+      if (actividad === 'padel_semanal') {
+        lugarInput.value = 'Club de Pádel';
+      } else if (actividad === 'gimnasio_mensual') {
+        lugarInput.value = 'Gimnasio';
+      } else {
+        lugarInput.value = '';
+      }
+    });
+    
+    // Establecer valor inicial
+    if (actividadSelect.value === 'padel_semanal') {
+      lugarInput.value = 'Club de Pádel';
+    } else if (actividadSelect.value === 'gimnasio_mensual') {
+      lugarInput.value = 'Gimnasio';
+    }
+  }
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('deportesFileBtn');
+  const fileInput = document.getElementById('deportesComprobante');
+  const fileName = document.getElementById('deportesFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      if (typeof handleFileInput === 'function') {
+        handleFileInput(fileInput, function(file) {
+          if (fileName) fileName.textContent = file.name;
+        });
+      } else {
+        fileInput.click();
+      }
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar gasto
+  const saveBtn = document.getElementById('saveDeportes');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveDeportesRecord);
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearDeportes');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearDeportesForm);
+  }
+  
+  // Cargar registros existentes
+  loadDeportesRecords();
+}
+
+function saveDeportesRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('deportesFecha').value;
+  const montoInput = document.getElementById('deportesMonto');
+  const monto = parseFloat(montoInput.value);
+  const actividad = document.getElementById('deportesActividad').value;
+  const lugar = document.getElementById('deportesLugar').value;
+  const metodoPago = document.getElementById('deportesMetodoPago').value;
+  const notas = document.getElementById('deportesNotas').value;
+  const fileInput = document.getElementById('deportesComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0 || isNaN(monto)) {
+    alert('Por favor ingrese un monto válido');
+    montoInput.focus();
+    return;
+  }
+  
+  if (!lugar.trim()) {
+    alert('Por favor ingrese el lugar o club');
+    return;
+  }
+  
+  if (!state[k].deportes) state[k].deportes = [];
+  
+  const record = {
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
+    fecha: fecha,
+    monto: monto,
+    actividad: actividad,
+    lugar: lugar,
+    metodoPago: metodoPago,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    if (typeof storeFile === 'function') {
+      storeFile(file).then(fileId => {
+        record.comprobanteId = fileId;
+        record.comprobanteNombre = file.name;
+        completeSaveDeportes(record, k);
+      }).catch(error => {
+        console.error('Error guardando archivo:', error);
+        completeSaveDeportes(record, k);
+      });
+    } else {
+      record.comprobanteNombre = file.name;
+      completeSaveDeportes(record, k);
+    }
+  } else {
+    completeSaveDeportes(record, k);
+  }
+}
+
+function completeSaveDeportes(record, k) {
+  state[k].deportes.push(record);
+  save();
+  
+  alert('Gasto deportivo guardado correctamente');
+  loadDeportesRecords();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
+  clearDeportesForm();
+}
+
+function loadDeportesRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('deportesRecords');
+  const totalElement = document.getElementById('deportesTotal');
+  const countElement = document.getElementById('deportesCount');
+  const actividadTotalElement = document.getElementById('deportesActividadTotal');
+  
+  if (!recordsContainer) return;
+  
+  const records = state[k].deportes || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  const padelTotal = records
+    .filter(record => record.actividad === 'padel_semanal')
+    .reduce((sum, record) => sum + record.monto, 0);
+  const gymTotal = records
+    .filter(record => record.actividad === 'gimnasio_mensual')
+    .reduce((sum, record) => sum + record.monto, 0);
+  
+  if (totalElement) totalElement.textContent = fmt(total);
+  if (countElement) countElement.textContent = records.length;
+  if (actividadTotalElement) {
+    actividadTotalElement.textContent = `Pádel: ${fmt(padelTotal)} | Gym: ${fmt(gymTotal)}`;
+  }
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay gastos deportivos registrados este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.actividad}">${getActividadText(record.actividad)}</span>
+          <span class="record-metodo-pago ${record.metodoPago}">${getMetodoPagoText(record.metodoPago)}</span>
+          <span class="record-lugar">${record.lugar}</span>
+          ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadDeportesFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteDeportesRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteDeportesRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este gasto deportivo?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].deportes.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].deportes.splice(index, 1);
+    save();
+    loadDeportesRecords();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
+    alert('Gasto eliminado correctamente');
+  }
+}
+
+function downloadDeportesFile(fileId) {
+  if (typeof downloadFile === 'function') {
+    downloadFile(fileId);
+  } else {
+    alert('Función de descarga no disponible');
+  }
+}
+
+function clearDeportesForm() {
+  const fechaInput = document.getElementById('deportesFecha');
+  const montoInput = document.getElementById('deportesMonto');
+  const actividadSelect = document.getElementById('deportesActividad');
+  const lugarInput = document.getElementById('deportesLugar');
+  const metodoPagoSelect = document.getElementById('deportesMetodoPago');
+  const notasInput = document.getElementById('deportesNotas');
+  const fileName = document.getElementById('deportesFileName');
+  const fileInput = document.getElementById('deportesComprobante');
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '';
+  if (actividadSelect) actividadSelect.value = 'padel_semanal';
+  if (lugarInput) lugarInput.value = 'Club de Pádel';
+  if (metodoPagoSelect) metodoPagoSelect.value = 'efectivo';
+  if (notasInput) notasInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  if (fechaInput) fechaInput.value = today;
+}
+
+function getActividadText(actividad) {
+  const actividades = {
+    'padel_semanal': 'Pádel - Semanal',
+    'gimnasio_mensual': 'Gimnasio - Mensual',
+    'otros': 'Otros'
+  };
+  return actividades[actividad] || actividad;
+}
+
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'efectivo': 'Efectivo',
+    'debito': 'Débito',
+    'credito': 'Crédito',
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
+}
+
+function formatDate(dateString) {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Asegurar que las funciones globales existan
+if (typeof ensureMonth === 'undefined') {
+  function ensureMonth() {
+    const k = monthKey();
+    if (!state[k]) state[k] = {};
+    return k;
+  }
+}
+
+if (typeof monthKey === 'undefined') {
+  function monthKey() {
+    return `${currentSelectedYear}-${(currentSelectedMonth + 1).toString().padStart(2, '0')}`;
+  }
+}
+
+if (typeof fmt === 'undefined') {
+  function fmt(n) {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 2
+    }).format(Number(n || 0));
+  }
+}
+
+if (typeof save === 'undefined') {
+  function save() {
+    localStorage.setItem('finanzas_state', JSON.stringify(state));
+  }
+}
+</script>
+
+<style>
+.record-lugar {
+  font-weight: 600;
+  color: #111827;
+}
+
+.record-metodo-pago {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago.efectivo { background: #1dd1a1; color: white; }
+.record-metodo-pago.debito { background: #54a0ff; color: white; }
+.record-metodo-pago.credito { background: #ff9f40; color: white; }
+.record-metodo-pago.transferencia { background: #5f27cd; color: white; }
+
+.record-categoria.padel_semanal { background: #ff6b6b; color: white; }
+.record-categoria.gimnasio_mensual { background: #48dbfb; color: #000; }
+.record-categoria.otros { background: #c8d6e5; color: #222f3e; }
+
+.summary-cards.mini .summary-card {
+  padding: 15px;
+}
+
+.summary-cards.mini .summary-amount {
+  font-size: 1.2rem;
+}
+</style>

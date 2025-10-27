@@ -1,0 +1,339 @@
+<div class="form-container">
+  <h2><i class="fas fa-parking"></i> Cochera</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="cocheraFecha"><i class="fas fa-calendar"></i> Fecha de Pago</label>
+      <input type="date" id="cocheraFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="cocheraMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="cocheraMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="cocheraPeriodo"><i class="fas fa-calendar-alt"></i> Período</label>
+      <input type="text" id="cocheraPeriodo" placeholder="Ej: Enero 2024">
+    </div>
+    
+    <div class="form-group">
+      <label for="cocheraComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="cocheraComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="cocheraFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="cocheraFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="cocheraNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="cocheraNotas" placeholder="Detalles adicionales..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveCochera" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Pago
+    </button>
+    <button type="button" id="clearCochera" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Pagos</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="cocheraTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Pagos Realizados</h4>
+        <div class="summary-amount" id="cocheraCount">0</div>
+      </div>
+    </div>
+    <div id="cocheraRecords" class="records-list"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeCocheraForm();
+});
+
+function initializeCocheraForm() {
+  // Inicializar calendario
+  if (typeof initFormCalendar === 'function') {
+    initFormCalendar('cocheraFecha');
+  }
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('cocheraFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('cocheraFileBtn');
+  const fileInput = document.getElementById('cocheraComprobante');
+  const fileName = document.getElementById('cocheraFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      if (typeof handleFileInput === 'function') {
+        handleFileInput(fileInput, function(file) {
+          if (fileName) fileName.textContent = file.name;
+        });
+      } else {
+        fileInput.click();
+      }
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar pago
+  const saveBtn = document.getElementById('saveCochera');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveCocheraRecord);
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearCochera');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearCocheraForm);
+  }
+  
+  // Cargar registros existentes
+  loadCocheraRecords();
+}
+
+function saveCocheraRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('cocheraFecha').value;
+  const montoInput = document.getElementById('cocheraMonto');
+  const monto = parseFloat(montoInput.value);
+  const periodo = document.getElementById('cocheraPeriodo').value;
+  const notas = document.getElementById('cocheraNotas').value;
+  const fileInput = document.getElementById('cocheraComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0 || isNaN(monto)) {
+    alert('Por favor ingrese un monto válido');
+    montoInput.focus();
+    return;
+  }
+  
+  if (!state[k].cochera) state[k].cochera = [];
+  
+  const record = {
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
+    fecha: fecha,
+    monto: monto,
+    periodo: periodo,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    if (typeof storeFile === 'function') {
+      storeFile(file).then(fileId => {
+        record.comprobanteId = fileId;
+        record.comprobanteNombre = file.name;
+        completeSaveCochera(record, k);
+      }).catch(error => {
+        console.error('Error guardando archivo:', error);
+        completeSaveCochera(record, k);
+      });
+    } else {
+      record.comprobanteNombre = file.name;
+      completeSaveCochera(record, k);
+    }
+  } else {
+    completeSaveCochera(record, k);
+  }
+}
+
+function completeSaveCochera(record, k) {
+  state[k].cochera.push(record);
+  save();
+  
+  alert('Pago de cochera guardado correctamente');
+  loadCocheraRecords();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
+  clearCocheraForm();
+}
+
+function loadCocheraRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('cocheraRecords');
+  const totalElement = document.getElementById('cocheraTotal');
+  const countElement = document.getElementById('cocheraCount');
+  
+  if (!recordsContainer) return;
+  
+  const records = state[k].cochera || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  if (totalElement) totalElement.textContent = fmt(total);
+  if (countElement) countElement.textContent = records.length;
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay pagos de cochera registrados este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          ${record.periodo ? `<span class="record-periodo">${record.periodo}</span>` : ''}
+          ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadCocheraFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteCocheraRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteCocheraRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este pago de cochera?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].cochera.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].cochera.splice(index, 1);
+    save();
+    loadCocheraRecords();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
+    alert('Pago eliminado correctamente');
+  }
+}
+
+function downloadCocheraFile(fileId) {
+  if (typeof downloadFile === 'function') {
+    downloadFile(fileId);
+  } else {
+    alert('Función de descarga no disponible');
+  }
+}
+
+function clearCocheraForm() {
+  const fechaInput = document.getElementById('cocheraFecha');
+  const montoInput = document.getElementById('cocheraMonto');
+  const periodoInput = document.getElementById('cocheraPeriodo');
+  const notasInput = document.getElementById('cocheraNotas');
+  const fileName = document.getElementById('cocheraFileName');
+  const fileInput = document.getElementById('cocheraComprobante');
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '';
+  if (periodoInput) periodoInput.value = '';
+  if (notasInput) notasInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  if (fechaInput) fechaInput.value = today;
+}
+
+function formatDate(dateString) {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Asegurar que las funciones globales existan
+if (typeof ensureMonth === 'undefined') {
+  function ensureMonth() {
+    const k = monthKey();
+    if (!state[k]) state[k] = {};
+    return k;
+  }
+}
+
+if (typeof monthKey === 'undefined') {
+  function monthKey() {
+    return `${currentSelectedYear}-${(currentSelectedMonth + 1).toString().padStart(2, '0')}`;
+  }
+}
+
+if (typeof fmt === 'undefined') {
+  function fmt(n) {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 2
+    }).format(Number(n || 0));
+  }
+}
+
+if (typeof save === 'undefined') {
+  function save() {
+    localStorage.setItem('finanzas_state', JSON.stringify(state));
+  }
+}
+</script>

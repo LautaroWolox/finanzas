@@ -1,0 +1,376 @@
+<div class="form-container">
+  <h2><i class="fas fa-brain"></i> Salud Mental</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="saludFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="saludFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="saludMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="saludMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="saludTipo"><i class="fas fa-user-md"></i> Tipo de Terapia</label>
+      <select id="saludTipo">
+        <option value="psicologo_lautaro">Psicólogo Lautaro</option>
+        <option value="psiquiatra_lautaro">Psiquiatra Lautaro</option>
+        <option value="terapia_pareja">Terapia de Pareja</option>
+        <option value="medicamentos">Medicamentos</option>
+        <option value="taller">Taller/Grupo</option>
+        <option value="libro">Libro/Material</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="saludProfesional"><i class="fas fa-user"></i> Profesional</label>
+      <input type="text" id="saludProfesional" placeholder="Nombre del profesional">
+    </div>
+    
+    <div class="form-group">
+      <label for="saludDuracion"><i class="fas fa-clock"></i> Duración (minutos)</label>
+      <input type="number" id="saludDuracion" placeholder="60" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="saludModalidad"><i class="fas fa-laptop"></i> Modalidad</label>
+      <select id="saludModalidad">
+        <option value="presencial">Presencial</option>
+        <option value="virtual">Virtual</option>
+        <option value="telefonica">Telefónica</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="saludComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="saludComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="saludFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="saludFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="saludTemas"><i class="fas fa-comments"></i> Temas Trabajados</label>
+      <textarea id="saludTemas" placeholder="Temas o aspectos trabajados en la sesión..." rows="3"></textarea>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="saludNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="saludNotas" placeholder="Reflexiones o notas adicionales..." rows="2"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveSalud" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Sesión
+    </button>
+    <button type="button" id="clearSalud" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Salud Mental</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="saludTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Sesiones Realizadas</h4>
+        <div class="summary-amount" id="saludCount">0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Horas de Terapia</h4>
+        <div class="summary-amount" id="saludHoras">0h</div>
+      </div>
+    </div>
+    <div id="saludRecords" class="records-list">
+      <!-- Los registros se cargarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar calendario
+  initFormCalendar('saludFecha');
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('saludFecha').value = today;
+  
+  // Manejar subida de archivos
+  document.getElementById('saludFileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById('saludComprobante'), function(file) {
+      document.getElementById('saludFileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById('saludComprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById('saludFileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar sesión
+  document.getElementById('saveSalud').addEventListener('click', function() {
+    saveSaludRecord();
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clearSalud').addEventListener('click', function() {
+    clearSaludForm();
+  });
+  
+  // Cargar registros existentes
+  loadSaludRecords();
+});
+
+function saveSaludRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('saludFecha').value;
+  const monto = parseFloat(document.getElementById('saludMonto').value);
+  const tipo = document.getElementById('saludTipo').value;
+  const profesional = document.getElementById('saludProfesional').value;
+  const duracion = parseInt(document.getElementById('saludDuracion').value) || 0;
+  const modalidad = document.getElementById('saludModalidad').value;
+  const temas = document.getElementById('saludTemas').value;
+  const notas = document.getElementById('saludNotas').value;
+  const fileInput = document.getElementById('saludComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!profesional.trim()) {
+    alert('Por favor ingrese el nombre del profesional');
+    return;
+  }
+  
+  if (!state[k].salud) state[k].salud = [];
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    monto: monto,
+    tipo: tipo,
+    profesional: profesional,
+    duracion: duracion,
+    modalidad: modalidad,
+    temas: temas,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveSalud(record, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveSalud(record, k);
+    });
+  } else {
+    completeSaveSalud(record, k);
+  }
+}
+
+function completeSaveSalud(record, k) {
+  state[k].salud.push(record);
+  save();
+  
+  alert('Sesión guardada correctamente');
+  loadSaludRecords();
+  renderKPIs();
+  clearSaludForm();
+}
+
+function loadSaludRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('saludRecords');
+  const records = state[k].salud || [];
+  
+  // Calcular estadísticas
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  const horasTotales = records.reduce((sum, record) => sum + (record.duracion || 0), 0) / 60;
+  
+  document.getElementById('saludTotal').textContent = fmt(total);
+  document.getElementById('saludCount').textContent = records.length;
+  document.getElementById('saludHoras').textContent = horasTotales.toFixed(1) + 'h';
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay sesiones registradas este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.tipo}">${getTipoText(record.tipo)}</span>
+          <span class="record-profesional">${record.profesional}</span>
+          ${record.duracion ? `<span class="record-duracion">${record.duracion} min (${record.modalidad})</span>` : ''}
+          ${record.temas ? `<span class="record-temas">${record.temas}</span>` : ''}
+          ${record.notas ? `<span class="record-notes">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadSaludFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteSaludRecord('${record.id}')" title="Eliminar sesión">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteSaludRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar esta sesión?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].salud.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].salud.splice(index, 1);
+    save();
+    loadSaludRecords();
+    renderKPIs();
+    alert('Sesión eliminada correctamente');
+  }
+}
+
+function downloadSaludFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearSaludForm() {
+  document.getElementById('saludFecha').value = '';
+  document.getElementById('saludMonto').value = '';
+  document.getElementById('saludTipo').value = 'psicologo_lautaro';
+  document.getElementById('saludProfesional').value = '';
+  document.getElementById('saludDuracion').value = '60';
+  document.getElementById('saludModalidad').value = 'virtual';
+  document.getElementById('saludTemas').value = '';
+  document.getElementById('saludNotas').value = '';
+  document.getElementById('saludFileName').textContent = 'No seleccionado';
+  document.getElementById('saludComprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('saludFecha').value = today;
+}
+
+function getTipoText(tipo) {
+  const tipos = {
+    'psicologo_lautaro': 'Psicólogo Lautaro',
+    'psiquiatra_lautaro': 'Psiquiatra Lautaro',
+    'terapia_pareja': 'Terapia de Pareja',
+    'medicamentos': 'Medicamentos',
+    'taller': 'Taller/Grupo',
+    'libro': 'Libro/Material',
+    'otros': 'Otros'
+  };
+  return tipos[tipo] || tipo;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>
+
+<style>
+.record-profesional {
+  font-weight: 600;
+  color: #111827;
+}
+
+.record-duracion {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.record-temas {
+  color: #6b7280;
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.record-categoria.psicologo_lautaro {
+  background: #48dbfb;
+  color: #000000;
+}
+
+.record-categoria.psiquiatra_lautaro {
+  background: #ff9ff3;
+  color: #000000;
+}
+
+.record-categoria.terapia_pareja {
+  background: #1dd1a1;
+  color: white;
+}
+
+.record-categoria.medicamentos {
+  background: #ee5253;
+  color: white;
+}
+
+.record-categoria.taller {
+  background: #feca57;
+  color: #000000;
+}
+
+.record-categoria.libro {
+  background: #54a0ff;
+  color: white;
+}
+
+.record-categoria.otros {
+  background: #c8d6e5;
+  color: #222f3e;
+}
+</style>

@@ -1,0 +1,281 @@
+<div class="form-container">
+  <h2><i class="fas fa-home"></i> Servicios Hogar</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="serviciosFecha"><i class="fas fa-calendar"></i> Fecha de Pago</label>
+      <input type="date" id="serviciosFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="serviciosMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="serviciosMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="serviciosCategoria"><i class="fas fa-tag"></i> Servicio</label>
+      <select id="serviciosCategoria">
+        <option value="luz">Luz</option>
+        <option value="gas">Gas</option>
+        <option value="agua">Agua</option>
+        <option value="internet">Internet/Flow</option>
+        <option value="arba">ARBA</option>
+        <option value="apr">APR</option>
+        <option value="otros">Otros Servicios</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="serviciosPeriodo"><i class="fas fa-calendar-alt"></i> Período Facturado</label>
+      <input type="text" id="serviciosPeriodo" placeholder="Ej: Enero 2024">
+    </div>
+    
+    <div class="form-group">
+      <label for="serviciosComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="serviciosComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="serviciosFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="serviciosFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="serviciosNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
+      <textarea id="serviciosNotas" placeholder="Detalles adicionales sobre este pago..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveServicios" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Servicio
+    </button>
+    <button type="button" id="clearServicios" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Servicios</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="serviciosTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Servicios Pagados</h4>
+        <div class="summary-amount" id="serviciosCount">0</div>
+      </div>
+    </div>
+    <div id="serviciosRecords" class="records-list">
+      <!-- Los registros se cargarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar calendario
+  initFormCalendar('serviciosFecha');
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('serviciosFecha').value = today;
+  
+  // Manejar subida de archivos
+  document.getElementById('serviciosFileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById('serviciosComprobante'), function(file) {
+      document.getElementById('serviciosFileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById('serviciosComprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById('serviciosFileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar servicio
+  document.getElementById('saveServicios').addEventListener('click', function() {
+    saveServiciosRecord();
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clearServicios').addEventListener('click', function() {
+    clearServiciosForm();
+  });
+  
+  // Cargar registros existentes
+  loadServiciosRecords();
+});
+
+function saveServiciosRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('serviciosFecha').value;
+  const monto = parseFloat(document.getElementById('serviciosMonto').value);
+  const categoria = document.getElementById('serviciosCategoria').value;
+  const periodo = document.getElementById('serviciosPeriodo').value;
+  const notas = document.getElementById('serviciosNotas').value;
+  const fileInput = document.getElementById('serviciosComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!state[k].servicios) state[k].servicios = [];
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    monto: monto,
+    categoria: categoria,
+    periodo: periodo,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveServicios(record, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveServicios(record, k);
+    });
+  } else {
+    completeSaveServicios(record, k);
+  }
+}
+
+function completeSaveServicios(record, k) {
+  state[k].servicios.push(record);
+  save();
+  
+  alert('Servicio guardado correctamente');
+  loadServiciosRecords();
+  renderKPIs();
+  clearServiciosForm();
+}
+
+function loadServiciosRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('serviciosRecords');
+  const records = state[k].servicios || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  document.getElementById('serviciosTotal').textContent = fmt(total);
+  document.getElementById('serviciosCount').textContent = records.length;
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay registros de servicios para este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-category ${record.categoria}">${getCategoriaText(record.categoria)}</span>
+          ${record.periodo ? `<span class="record-periodo">${record.periodo}</span>` : ''}
+          ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadServiciosFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteServiciosRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteServiciosRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este registro de servicio?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].servicios.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].servicios.splice(index, 1);
+    save();
+    loadServiciosRecords();
+    renderKPIs();
+    alert('Registro eliminado correctamente');
+  }
+}
+
+function downloadServiciosFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearServiciosForm() {
+  document.getElementById('serviciosFecha').value = '';
+  document.getElementById('serviciosMonto').value = '';
+  document.getElementById('serviciosCategoria').value = 'luz';
+  document.getElementById('serviciosPeriodo').value = '';
+  document.getElementById('serviciosNotas').value = '';
+  document.getElementById('serviciosFileName').textContent = 'No seleccionado';
+  document.getElementById('serviciosComprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('serviciosFecha').value = today;
+}
+
+function getCategoriaText(categoria) {
+  const categorias = {
+    'luz': 'Luz',
+    'gas': 'Gas',
+    'agua': 'Agua',
+    'internet': 'Internet/Flow',
+    'arba': 'ARBA',
+    'apr': 'APR',
+    'otros': 'Otros Servicios'
+  };
+  return categorias[categoria] || categoria;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>

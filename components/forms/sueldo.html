@@ -1,0 +1,251 @@
+<div class="form-container">
+  <h2><i class="fas fa-money-bill-wave"></i> Sueldo</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="sueldoFecha"><i class="fas fa-calendar"></i> Fecha de Pago</label>
+      <input type="date" id="sueldoFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="sueldoMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+      <input type="number" id="sueldoMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="sueldoFuente"><i class="fas fa-building"></i> Fuente</label>
+      <select id="sueldoFuente">
+        <option value="trabajo_principal">Trabajo Principal</option>
+        <option value="freelance">Freelance</option>
+        <option value="extra">Extra</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="sueldoComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="sueldoComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="sueldoFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="sueldoFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="sueldoNotas"><i class="fas fa-sticky-note"></i> Notas Adicionales</label>
+      <textarea id="sueldoNotas" placeholder="Observaciones sobre este ingreso..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveSueldo" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Sueldo
+    </button>
+    <button type="button" id="clearSueldo" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Sueldos</h3>
+    <div id="sueldoRecords" class="records-list">
+      <!-- Los registros se cargarán dinámicamente -->
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar calendario
+  initFormCalendar('sueldoFecha');
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('sueldoFecha').value = today;
+  
+  // Manejar subida de archivos
+  document.getElementById('sueldoFileBtn').addEventListener('click', function() {
+    handleFileInput(document.getElementById('sueldoComprobante'), function(file) {
+      document.getElementById('sueldoFileName').textContent = file.name;
+    });
+  });
+  
+  document.getElementById('sueldoComprobante').addEventListener('change', function(e) {
+    if (e.target.files.length > 0) {
+      document.getElementById('sueldoFileName').textContent = e.target.files[0].name;
+    }
+  });
+  
+  // Guardar sueldo
+  document.getElementById('saveSueldo').addEventListener('click', function() {
+    saveSueldoRecord();
+  });
+  
+  // Limpiar formulario
+  document.getElementById('clearSueldo').addEventListener('click', function() {
+    clearSueldoForm();
+  });
+  
+  // Cargar registros existentes
+  loadSueldoRecords();
+});
+
+function saveSueldoRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('sueldoFecha').value;
+  const monto = parseFloat(document.getElementById('sueldoMonto').value);
+  const fuente = document.getElementById('sueldoFuente').value;
+  const notas = document.getElementById('sueldoNotas').value;
+  const fileInput = document.getElementById('sueldoComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0) {
+    alert('Por favor ingrese un monto válido');
+    return;
+  }
+  
+  if (!state[k].sueldo) state[k].sueldo = [];
+  
+  const record = {
+    id: crypto.randomUUID(),
+    fecha: fecha,
+    monto: monto,
+    fuente: fuente,
+    notas: notas,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    storeFile(file).then(fileId => {
+      record.comprobanteId = fileId;
+      record.comprobanteNombre = file.name;
+      completeSaveSueldo(record, k);
+    }).catch(error => {
+      console.error('Error guardando archivo:', error);
+      completeSaveSueldo(record, k);
+    });
+  } else {
+    completeSaveSueldo(record, k);
+  }
+}
+
+function completeSaveSueldo(record, k) {
+  state[k].sueldo.push(record);
+  save();
+  
+  alert('Sueldo guardado correctamente');
+  loadSueldoRecords();
+  renderKPIs();
+  clearSueldoForm();
+}
+
+function loadSueldoRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('sueldoRecords');
+  const records = state[k].sueldo || [];
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay registros de sueldo para este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-category">${getFuenteText(record.fuente)}</span>
+          ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadSueldoFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteSueldoRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteSueldoRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar este registro de sueldo?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].sueldo.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].sueldo.splice(index, 1);
+    save();
+    loadSueldoRecords();
+    renderKPIs();
+    alert('Registro eliminado correctamente');
+  }
+}
+
+function downloadSueldoFile(fileId) {
+  downloadFile(fileId);
+}
+
+function clearSueldoForm() {
+  document.getElementById('sueldoFecha').value = '';
+  document.getElementById('sueldoMonto').value = '';
+  document.getElementById('sueldoFuente').value = 'trabajo_principal';
+  document.getElementById('sueldoNotas').value = '';
+  document.getElementById('sueldoFileName').textContent = 'No seleccionado';
+  document.getElementById('sueldoComprobante').value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('sueldoFecha').value = today;
+}
+
+function getFuenteText(fuente) {
+  const fuentes = {
+    'trabajo_principal': 'Trabajo Principal',
+    'freelance': 'Freelance',
+    'extra': 'Extra',
+    'otros': 'Otros'
+  };
+  return fuentes[fuente] || fuente;
+}
+
+function formatDate(dateString) {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('es-AR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+}
+</script>

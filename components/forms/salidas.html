@@ -1,0 +1,464 @@
+<div class="form-container">
+  <h2><i class="fas fa-film"></i> Salidas y Entretenimiento</h2>
+  
+  <div class="form-grid">
+    <div class="form-group">
+      <label for="salidasFecha"><i class="fas fa-calendar"></i> Fecha</label>
+      <input type="date" id="salidasFecha" class="form-calendar-input">
+    </div>
+    
+    <div class="form-group">
+      <label for="salidasMonto"><i class="fas fa-dollar-sign"></i> Monto Total</label>
+      <input type="number" id="salidasMonto" placeholder="0.00" step="0.01" min="0">
+    </div>
+    
+    <div class="form-group">
+      <label for="salidasTipo"><i class="fas fa-tag"></i> Tipo de Salida</label>
+      <select id="salidasTipo">
+        <option value="boliche">Boliche</option>
+        <option value="bar">Bar</option>
+        <option value="restaurante">Restaurante</option>
+        <option value="otros">Otros</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="salidasLugar"><i class="fas fa-map-marker-alt"></i> Lugar</label>
+      <input type="text" id="salidasLugar" placeholder="Nombre del lugar">
+    </div>
+    
+    <div class="form-group">
+      <label for="salidasPersonas"><i class="fas fa-users"></i> Cantidad de Personas</label>
+      <input type="number" id="salidasPersonas" placeholder="1" min="1" value="1">
+    </div>
+    
+    <div class="form-group">
+      <label for="salidasMetodoPago"><i class="fas fa-credit-card"></i> Método de Pago</label>
+      <select id="salidasMetodoPago">
+        <option value="efectivo">Efectivo</option>
+        <option value="debito">Débito</option>
+        <option value="credito">Crédito</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label for="salidasComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <div class="file-input-container">
+        <input type="file" id="salidasComprobante" accept="image/*,.pdf" style="display:none">
+        <button type="button" id="salidasFileBtn" class="file-btn">
+          <i class="fas fa-camera"></i> Subir Comprobante
+        </button>
+        <span id="salidasFileName" class="file-name">No seleccionado</span>
+      </div>
+    </div>
+    
+    <div class="form-group full-width">
+      <label for="salidasDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+      <textarea id="salidasDescripcion" placeholder="Describe la salida o actividad..." rows="3"></textarea>
+    </div>
+  </div>
+  
+  <div class="form-actions">
+    <button type="button" id="saveSalidas" class="btn-primary">
+      <i class="fas fa-save"></i> Guardar Salida
+    </button>
+    <button type="button" id="clearSalidas" class="btn-secondary">
+      <i class="fas fa-broom"></i> Limpiar Formulario
+    </button>
+  </div>
+  
+  <div class="records-section">
+    <h3><i class="fas fa-history"></i> Historial de Salidas</h3>
+    <div class="summary-cards mini">
+      <div class="summary-card">
+        <h4>Total Este Mes</h4>
+        <div class="summary-amount" id="salidasTotal">$0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Cantidad de Salidas</h4>
+        <div class="summary-amount" id="salidasCount">0</div>
+      </div>
+      <div class="summary-card">
+        <h4>Por Tipo</h4>
+        <div class="summary-amount" id="salidasTipoTotal">$0</div>
+      </div>
+    </div>
+    <div id="salidasRecords" class="records-list"></div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  initializeSalidasForm();
+});
+
+function initializeSalidasForm() {
+  // Inicializar calendario
+  if (typeof initFormCalendar === 'function') {
+    initFormCalendar('salidasFecha');
+  }
+  
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('salidasFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('salidasFileBtn');
+  const fileInput = document.getElementById('salidasComprobante');
+  const fileName = document.getElementById('salidasFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      if (typeof handleFileInput === 'function') {
+        handleFileInput(fileInput, function(file) {
+          if (fileName) fileName.textContent = file.name;
+        });
+      } else {
+        fileInput.click();
+      }
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar salida
+  const saveBtn = document.getElementById('saveSalidas');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveSalidasRecord);
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearSalidas');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearSalidasForm);
+  }
+  
+  // Cargar registros existentes
+  loadSalidasRecords();
+}
+
+function saveSalidasRecord() {
+  const k = ensureMonth();
+  const fecha = document.getElementById('salidasFecha').value;
+  const montoInput = document.getElementById('salidasMonto');
+  const monto = parseFloat(montoInput.value);
+  const tipo = document.getElementById('salidasTipo').value;
+  const lugar = document.getElementById('salidasLugar').value;
+  const personasInput = document.getElementById('salidasPersonas');
+  const personas = parseInt(personasInput.value) || 1;
+  const metodoPago = document.getElementById('salidasMetodoPago').value;
+  const descripcion = document.getElementById('salidasDescripcion').value;
+  const fileInput = document.getElementById('salidasComprobante');
+  
+  if (!fecha) {
+    alert('Por favor seleccione una fecha');
+    return;
+  }
+  
+  if (!monto || monto <= 0 || isNaN(monto)) {
+    alert('Por favor ingrese un monto válido');
+    montoInput.focus();
+    return;
+  }
+  
+  if (!lugar.trim()) {
+    alert('Por favor ingrese el lugar');
+    return;
+  }
+  
+  if (!state[k].salidas) state[k].salidas = [];
+  
+  const record = {
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
+    fecha: fecha,
+    monto: monto,
+    tipo: tipo,
+    lugar: lugar,
+    personas: personas,
+    metodoPago: metodoPago,
+    descripcion: descripcion,
+    timestamp: new Date().toISOString()
+  };
+  
+  // Manejar archivo si existe
+  if (fileInput && fileInput.files.length > 0) {
+    const file = fileInput.files[0];
+    if (typeof storeFile === 'function') {
+      storeFile(file).then(fileId => {
+        record.comprobanteId = fileId;
+        record.comprobanteNombre = file.name;
+        completeSaveSalidas(record, k);
+      }).catch(error => {
+        console.error('Error guardando archivo:', error);
+        completeSaveSalidas(record, k);
+      });
+    } else {
+      record.comprobanteNombre = file.name;
+      completeSaveSalidas(record, k);
+    }
+  } else {
+    completeSaveSalidas(record, k);
+  }
+}
+
+function completeSaveSalidas(record, k) {
+  state[k].salidas.push(record);
+  save();
+  
+  alert('Salida guardada correctamente');
+  loadSalidasRecords();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
+  clearSalidasForm();
+}
+
+function loadSalidasRecords() {
+  const k = ensureMonth();
+  const recordsContainer = document.getElementById('salidasRecords');
+  const totalElement = document.getElementById('salidasTotal');
+  const countElement = document.getElementById('salidasCount');
+  const tipoTotalElement = document.getElementById('salidasTipoTotal');
+  
+  if (!recordsContainer) return;
+  
+  const records = state[k].salidas || [];
+  
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  const bolicheTotal = records
+    .filter(record => record.tipo === 'boliche')
+    .reduce((sum, record) => sum + record.monto, 0);
+  const barTotal = records
+    .filter(record => record.tipo === 'bar')
+    .reduce((sum, record) => sum + record.monto, 0);
+  const restauranteTotal = records
+    .filter(record => record.tipo === 'restaurante')
+    .reduce((sum, record) => sum + record.monto, 0);
+  
+  if (totalElement) totalElement.textContent = fmt(total);
+  if (countElement) countElement.textContent = records.length;
+  if (tipoTotalElement) {
+    tipoTotalElement.textContent = `Boliche: ${fmt(bolicheTotal)} | Bar: ${fmt(barTotal)} | Rest: ${fmt(restauranteTotal)}`;
+  }
+  
+  if (records.length === 0) {
+    recordsContainer.innerHTML = `
+      <div class="no-records">
+        <i class="fas fa-inbox"></i>
+        <p>No hay salidas registradas este mes</p>
+      </div>
+    `;
+    return;
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  recordsContainer.innerHTML = sortedRecords.map(record => `
+    <div class="record-item">
+      <div class="record-info">
+        <div class="record-main">
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
+        </div>
+        <div class="record-details">
+          <span class="record-categoria ${record.tipo}">${getTipoText(record.tipo)}</span>
+          <span class="record-metodo-pago ${record.metodoPago}">${getMetodoPagoText(record.metodoPago)}</span>
+          <span class="record-lugar">${record.lugar}</span>
+          <span class="record-personas">${record.personas} persona${record.personas !== 1 ? 's' : ''}</span>
+          ${record.descripcion ? `<span class="record-desc">${record.descripcion}</span>` : ''}
+          ${record.comprobanteNombre ? `
+            <span class="record-file">
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+            </span>
+          ` : ''}
+        </div>
+      </div>
+      <div class="record-actions">
+        ${record.comprobanteId ? `
+          <button class="btn-icon" onclick="downloadSalidasFile('${record.comprobanteId}')" title="Descargar comprobante">
+            <i class="fas fa-download"></i>
+          </button>
+        ` : ''}
+        <button class="btn-icon danger" onclick="deleteSalidasRecord('${record.id}')" title="Eliminar registro">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteSalidasRecord(id) {
+  if (!confirm('¿Está seguro de que desea eliminar esta salida?')) {
+    return;
+  }
+  
+  const k = ensureMonth();
+  const index = state[k].salidas.findIndex(record => record.id === id);
+  
+  if (index !== -1) {
+    state[k].salidas.splice(index, 1);
+    save();
+    loadSalidasRecords();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
+    alert('Salida eliminada correctamente');
+  }
+}
+
+function downloadSalidasFile(fileId) {
+  if (typeof downloadFile === 'function') {
+    downloadFile(fileId);
+  } else {
+    alert('Función de descarga no disponible');
+  }
+}
+
+function clearSalidasForm() {
+  const fechaInput = document.getElementById('salidasFecha');
+  const montoInput = document.getElementById('salidasMonto');
+  const tipoSelect = document.getElementById('salidasTipo');
+  const lugarInput = document.getElementById('salidasLugar');
+  const personasInput = document.getElementById('salidasPersonas');
+  const metodoPagoSelect = document.getElementById('salidasMetodoPago');
+  const descripcionInput = document.getElementById('salidasDescripcion');
+  const fileName = document.getElementById('salidasFileName');
+  const fileInput = document.getElementById('salidasComprobante');
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '';
+  if (tipoSelect) tipoSelect.value = 'boliche';
+  if (lugarInput) lugarInput.value = '';
+  if (personasInput) personasInput.value = '1';
+  if (metodoPagoSelect) metodoPagoSelect.value = 'efectivo';
+  if (descripcionInput) descripcionInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
+  
+  // Establecer fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  if (fechaInput) fechaInput.value = today;
+}
+
+function getTipoText(tipo) {
+  const tipos = {
+    'boliche': 'Boliche',
+    'bar': 'Bar',
+    'restaurante': 'Restaurante',
+    'otros': 'Otros'
+  };
+  return tipos[tipo] || tipo;
+}
+
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'efectivo': 'Efectivo',
+    'debito': 'Débito',
+    'credito': 'Crédito',
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
+}
+
+function formatDate(dateString) {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+// Asegurar que las funciones globales existan
+if (typeof ensureMonth === 'undefined') {
+  function ensureMonth() {
+    const k = monthKey();
+    if (!state[k]) state[k] = {};
+    return k;
+  }
+}
+
+if (typeof monthKey === 'undefined') {
+  function monthKey() {
+    return `${currentSelectedYear}-${(currentSelectedMonth + 1).toString().padStart(2, '0')}`;
+  }
+}
+
+if (typeof fmt === 'undefined') {
+  function fmt(n) {
+    return new Intl.NumberFormat('es-AR', {
+      style: 'currency',
+      currency: 'ARS',
+      maximumFractionDigits: 2
+    }).format(Number(n || 0));
+  }
+}
+
+if (typeof save === 'undefined') {
+  function save() {
+    localStorage.setItem('finanzas_state', JSON.stringify(state));
+  }
+}
+</script>
+
+<style>
+.record-lugar {
+  font-weight: 600;
+  color: #111827;
+}
+
+.record-personas {
+  background: #f0fdf4;
+  color: #16a34a;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago.efectivo { background: #1dd1a1; color: white; }
+.record-metodo-pago.debito { background: #54a0ff; color: white; }
+.record-metodo-pago.credito { background: #ff9f40; color: white; }
+.record-metodo-pago.transferencia { background: #5f27cd; color: white; }
+
+.record-categoria.boliche { background: #ff6b6b; color: white; }
+.record-categoria.bar { background: #feca57; color: #000; }
+.record-categoria.restaurante { background: #ff9f40; color: white; }
+.record-categoria.otros { background: #c8d6e5; color: #222f3e; }
+
+.summary-cards.mini .summary-card {
+  padding: 15px;
+}
+
+.summary-cards.mini .summary-amount {
+  font-size: 1.2rem;
+}
+</style>
