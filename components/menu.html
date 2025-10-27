@@ -1,5 +1,36 @@
 <aside class="sidebar" id="sidebar">
   <h2><i class="fas fa-chart-pie"></i> Finanzas</h2>
+  
+  <!-- Selector de mes y año -->
+  <div class="month-selector">
+    <div class="selector-group">
+      <label for="monthSelect">Mes:</label>
+      <select id="monthSelect">
+        <option value="0">Enero</option>
+        <option value="1">Febrero</option>
+        <option value="2">Marzo</option>
+        <option value="3">Abril</option>
+        <option value="4">Mayo</option>
+        <option value="5">Junio</option>
+        <option value="6">Julio</option>
+        <option value="7">Agosto</option>
+        <option value="8">Septiembre</option>
+        <option value="9">Octubre</option>
+        <option value="10">Noviembre</option>
+        <option value="11">Diciembre</option>
+      </select>
+    </div>
+    <div class="selector-group">
+      <label for="yearSelect">Año:</label>
+      <select id="yearSelect">
+        <!-- Los años se cargarán dinámicamente -->
+      </select>
+    </div>
+    <div class="current-month-display">
+      <span id="mesActualDisplay">Mes actual</span>
+    </div>
+  </div>
+  
   <nav>
     <ul id="menu">
       <li data-section="sueldo" class="active"><i class="fas fa-money-bill-wave"></i> <span>Sueldo</span></li>
@@ -24,3 +55,294 @@
     <label class="filebtn"><i class="fas fa-file-import"></i> Importar <input id="fileImport" type="file" accept="application/json" /></label>
   </div>
 </aside>
+
+<script>
+// Variables globales
+let currentSelectedMonth = new Date().getMonth();
+let currentSelectedYear = new Date().getFullYear();
+let state = {};
+let currentSection = 'sueldo';
+
+// Inicializar cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', function() {
+  initializeApp();
+});
+
+function initializeApp() {
+  // Cargar estado desde localStorage
+  loadState();
+  
+  // Inicializar selector de mes y año
+  initializeMonthSelector();
+  
+  // Inicializar navegación del menú
+  initializeMenuNavigation();
+  
+  // Inicializar botones de acción
+  initializeActionButtons();
+  
+  // Cargar la sección inicial
+  loadSection('sueldo');
+}
+
+function initializeMonthSelector() {
+  const monthSelect = document.getElementById('monthSelect');
+  const yearSelect = document.getElementById('yearSelect');
+  
+  // Establecer mes actual
+  monthSelect.value = currentSelectedMonth;
+  
+  // Llenar años (desde 2020 hasta 2030)
+  const currentYear = new Date().getFullYear();
+  for (let year = 2020; year <= 2030; year++) {
+    const option = document.createElement('option');
+    option.value = year;
+    option.textContent = year;
+    yearSelect.appendChild(option);
+  }
+  
+  // Establecer año actual
+  yearSelect.value = currentSelectedYear;
+  
+  // Actualizar display del mes actual
+  updateMonthDisplay();
+  
+  // Manejar cambios
+  monthSelect.addEventListener('change', function() {
+    currentSelectedMonth = parseInt(this.value);
+    updateMonthDisplay();
+    loadSection(currentSection);
+  });
+  
+  yearSelect.addEventListener('change', function() {
+    currentSelectedYear = parseInt(this.value);
+    updateMonthDisplay();
+    loadSection(currentSection);
+  });
+}
+
+function updateMonthDisplay() {
+  const months = [
+    'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+  ];
+  
+  const display = document.getElementById('mesActualDisplay');
+  display.textContent = `${months[currentSelectedMonth]} ${currentSelectedYear}`;
+}
+
+function initializeMenuNavigation() {
+  const menuItems = document.querySelectorAll('#menu li');
+  
+  menuItems.forEach(item => {
+    item.addEventListener('click', function() {
+      // Remover clase active de todos
+      menuItems.forEach(i => i.classList.remove('active'));
+      
+      // Agregar clase active al clickeado
+      this.classList.add('active');
+      
+      // Cargar sección
+      const section = this.getAttribute('data-section');
+      currentSection = section;
+      loadSection(section);
+    });
+  });
+}
+
+function loadSection(section) {
+  const contentArea = document.getElementById('content');
+  
+  // Mostrar indicador de carga
+  contentArea.innerHTML = '<div class="loading">Cargando...</div>';
+  
+  // Cargar el contenido de la sección
+  fetch(`${section}.html`)
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('No se pudo cargar la sección');
+      }
+      return response.text();
+    })
+    .then(html => {
+      contentArea.innerHTML = html;
+      
+      // Inicializar funcionalidades específicas de la sección
+      initializeSection(section);
+    })
+    .catch(error => {
+      console.error('Error cargando sección:', error);
+      contentArea.innerHTML = '<div class="error">Error al cargar la sección</div>';
+    });
+}
+
+function initializeSection(section) {
+  // Aquí se inicializarán las funcionalidades específicas de cada sección
+  // Por ahora es un placeholder
+  console.log(`Inicializando sección: ${section}`);
+}
+
+function initializeActionButtons() {
+  // Exportar JSON
+  document.getElementById('btnExport').addEventListener('click', function() {
+    exportToJSON();
+  });
+  
+  // Generar PDF
+  document.getElementById('btnPDF').addEventListener('click', function() {
+    generatePDF();
+  });
+  
+  // Importar JSON
+  document.getElementById('fileImport').addEventListener('change', function(e) {
+    importFromJSON(e.target.files[0]);
+  });
+}
+
+function loadState() {
+  const savedState = localStorage.getItem('finanzas_state');
+  if (savedState) {
+    state = JSON.parse(savedState);
+  } else {
+    // Estado inicial
+    const currentKey = monthKey();
+    state = {
+      [currentKey]: {}
+    };
+  }
+}
+
+function monthKey() {
+  return `${currentSelectedYear}-${(currentSelectedMonth + 1).toString().padStart(2, '0')}`;
+}
+
+function ensureMonth() {
+  const k = monthKey();
+  if (!state[k]) state[k] = {};
+  return k;
+}
+
+function save() {
+  localStorage.setItem('finanzas_state', JSON.stringify(state));
+}
+
+function exportToJSON() {
+  const dataStr = JSON.stringify(state, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  
+  const exportFileDefaultName = `finanzas_${monthKey()}.json`;
+  
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', exportFileDefaultName);
+  linkElement.click();
+}
+
+function importFromJSON(file) {
+  const reader = new FileReader();
+  
+  reader.onload = function(e) {
+    try {
+      const importedState = JSON.parse(e.target.result);
+      state = importedState;
+      save();
+      alert('Datos importados correctamente');
+      // Recargar la sección actual
+      loadSection(currentSection);
+    } catch (error) {
+      alert('Error al importar el archivo: ' + error.message);
+    }
+  };
+  
+  reader.readAsText(file);
+}
+
+function generatePDF() {
+  // Implementación básica de generación de PDF
+  alert('Funcionalidad de PDF en desarrollo');
+}
+
+// Funciones de utilidad globales
+function fmt(n) {
+  const numero = typeof n === 'string' ? parseFloat(n.replace(',', '.')) : Number(n || 0);
+  return new Intl.NumberFormat('es-AR', {
+    style: 'currency',
+    currency: 'ARS',
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2
+  }).format(numero);
+}
+
+function formatDate(dateString) {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-AR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    });
+  } catch (e) {
+    return dateString;
+  }
+}
+
+function generateUUID() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+</script>
+
+<style>
+.month-selector {
+  background: #f8fafc;
+  padding: 15px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.selector-group {
+  margin-bottom: 10px;
+}
+
+.selector-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.selector-group select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: white;
+  color: #111827;
+}
+
+.current-month-display {
+  text-align: center;
+  padding: 10px;
+  background: #3b82f6;
+  color: white;
+  border-radius: 6px;
+  font-weight: 700;
+  margin-top: 10px;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 40px;
+  font-size: 1.2rem;
+}
+
+.loading {
+  color: #3b82f6;
+}
+
+.error {
+  color: #ef4444;
+}
+</style>

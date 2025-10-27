@@ -1,782 +1,779 @@
-<div class="form-container">
-  <h2><i class="fas fa-chart-bar"></i> Resumen Financiero Mensual</h2>
+<div class="dashboard-container">
+  <h2><i class="fas fa-chart-bar"></i> Resumen Financiero</h2>
   
-  <div class="resumen-header">
-    <div class="resumen-periodo">
-      <h3 id="resumenMesActual">Cargando...</h3>
-      <p class="resumen-fecha">Resumen generado el <span id="resumenFechaGeneracion"></span></p>
+  <div class="summary-header">
+    <div class="period-selector">
+      <select id="resumenPeriodo">
+        <option value="mensual">Vista Mensual</option>
+        <option value="anual">Vista Anual</option>
+      </select>
     </div>
-    <div class="resumen-actions">
-      <button id="exportResumenPDF" class="btn-primary">
-        <i class="fas fa-file-pdf"></i> Exportar PDF
-      </button>
-      <button id="refreshResumen" class="btn-secondary">
-        <i class="fas fa-sync"></i> Actualizar
+    <div class="export-options">
+      <button id="exportResumen" class="btn-secondary">
+        <i class="fas fa-file-export"></i> Exportar Datos
       </button>
     </div>
   </div>
   
-  <!-- RESUMEN PRINCIPAL -->
-  <div class="resumen-section">
-    <h3><i class="fas fa-chart-line"></i> Balance General</h3>
-    <div class="summary-cards">
-      <div class="summary-card positive">
-        <h4>Ingresos Totales</h4>
-        <div class="summary-amount" id="resumenIngresos">$0</div>
-        <div class="summary-detail" id="resumenIngresosDetalle">0 registros</div>
+  <!-- KPIs principales -->
+  <div class="kpi-cards">
+    <div class="kpi-card">
+      <div class="kpi-icon income">
+        <i class="fas fa-money-bill-wave"></i>
       </div>
-      <div class="summary-card negative">
-        <h4>Gastos Totales</h4>
-        <div class="summary-amount" id="resumenGastos">$0</div>
-        <div class="summary-detail" id="resumenGastosDetalle">0 categorías</div>
+      <div class="kpi-content">
+        <h3>Ingresos Totales</h3>
+        <div class="kpi-value" id="kpiIngresos">$0</div>
+        <div class="kpi-trend" id="kpiIngresosTrend">--</div>
       </div>
-      <div class="summary-card" id="resumenBalanceCard">
-        <h4>Balance Final</h4>
-        <div class="summary-amount" id="resumenBalance">$0</div>
-        <div class="summary-detail" id="resumenBalanceDetalle">Estado</div>
-      </div>
-      <div class="summary-card">
-        <h4>Ahorro Potencial</h4>
-        <div class="summary-amount" id="resumenAhorro">$0</div>
-        <div class="summary-detail" id="resumenAhorroDetalle">0% del ingreso</div>
-      </div>
-    </div>
-  </div>
-  
-  <!-- DISTRIBUCIÓN DE GASTOS -->
-  <div class="resumen-section">
-    <h3><i class="fas fa-chart-pie"></i> Distribución de Gastos</h3>
-    <div class="chart-container">
-      <canvas id="gastosChart" width="400" height="300"></canvas>
     </div>
     
-    <div class="gastos-detalle">
-      <h4>Desglose por Categoría</h4>
-      <div id="gastosCategorias" class="categorias-list">
-        <!-- Las categorías se cargarán dinámicamente -->
+    <div class="kpi-card">
+      <div class="kpi-icon expense">
+        <i class="fas fa-hand-holding-usd"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>Gastos Totales</h3>
+        <div class="kpi-value" id="kpiGastos">$0</div>
+        <div class="kpi-trend" id="kpiGastosTrend">--</div>
+      </div>
+    </div>
+    
+    <div class="kpi-card">
+      <div class="kpi-icon balance">
+        <i class="fas fa-balance-scale"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>Balance</h3>
+        <div class="kpi-value" id="kpiBalance">$0</div>
+        <div class="kpi-trend" id="kpiBalanceTrend">--</div>
+      </div>
+    </div>
+    
+    <div class="kpi-card">
+      <div class="kpi-icon savings">
+        <i class="fas fa-piggy-bank"></i>
+      </div>
+      <div class="kpi-content">
+        <h3>Ahorro</h3>
+        <div class="kpi-value" id="kpiAhorro">$0</div>
+        <div class="kpi-trend" id="kpiAhorroTrend">--</div>
       </div>
     </div>
   </div>
   
-  <!-- COMPARATIVA MES ANTERIOR -->
-  <div class="resumen-section">
-    <h3><i class="fas fa-exchange-alt"></i> Comparativa Mensual</h3>
-    <div class="comparativa-grid">
-      <div class="comparativa-item">
-        <h5>Este Mes</h5>
-        <div class="comparativa-monto" id="comparativaActual">$0</div>
-        <div class="comparativa-detalle" id="comparativaActualDetalle">Total gastos</div>
-      </div>
-      <div class="comparativa-item">
-        <h5>Mes Anterior</h5>
-        <div class="comparativa-monto" id="comparativaAnterior">$0</div>
-        <div class="comparativa-detalle" id="comparativaAnteriorDetalle">Total gastos</div>
-      </div>
-      <div class="comparativa-item">
-        <h5>Diferencia</h5>
-        <div class="comparativa-monto" id="comparativaDiferencia">$0</div>
-        <div class="comparativa-detalle" id="comparativaDiferenciaDetalle">Variación</div>
+  <!-- Gráficos y tablas -->
+  <div class="charts-grid">
+    <div class="chart-container">
+      <h3>Distribución de Gastos</h3>
+      <div id="gastosChart" class="chart-placeholder">
+        <canvas id="gastosChartCanvas"></canvas>
       </div>
     </div>
-  </div>
-  
-  <!-- TENDENCIAS -->
-  <div class="resumen-section">
-    <h3><i class="fas fa-chart-line"></i> Tendencias</h3>
-    <div class="tendencias-grid">
-      <div class="tendencia-item">
-        <div class="tendencia-icon">
-          <i class="fas fa-utensils"></i>
-        </div>
-        <div class="tendencia-info">
-          <h5>Delivery</h5>
-          <div class="tendencia-monto" id="tendenciaDelivery">$0</div>
-          <div class="tendencia-variacion" id="tendenciaDeliveryVar">0% del total</div>
-        </div>
-      </div>
-      <div class="tendencia-item">
-        <div class="tendencia-icon">
-          <i class="fas fa-car"></i>
-        </div>
-        <div class="tendencia-info">
-          <h5>Transporte</h5>
-          <div class="tendencia-monto" id="tendenciaTransporte">$0</div>
-          <div class="tendencia-variacion" id="tendenciaTransporteVar">0% del total</div>
-        </div>
-      </div>
-      <div class="tendencia-item">
-        <div class="tendencia-icon">
-          <i class="fas fa-home"></i>
-        </div>
-        <div class="tendencia-info">
-          <h5>Servicios</h5>
-          <div class="tendencia-monto" id="tendenciaServicios">$0</div>
-          <div class="tendencia-variacion" id="tendenciaServiciosVar">0% del total</div>
-        </div>
-      </div>
-      <div class="tendencia-item">
-        <div class="tendencia-icon">
-          <i class="fas fa-credit-card"></i>
-        </div>
-        <div class="tendencia-info">
-          <h5>Tarjetas</h5>
-          <div class="tendencia-monto" id="tendenciaTarjetas">$0</div>
-          <div class="tendencia-variacion" id="tendenciaTarjetasVar">0% del total</div>
-        </div>
+    
+    <div class="chart-container">
+      <h3>Evolución Mensual</h3>
+      <div id="evolucionChart" class="chart-placeholder">
+        <canvas id="evolucionChartCanvas"></canvas>
       </div>
     </div>
-  </div>
-  
-  <!-- RECOMENDACIONES -->
-  <div class="resumen-section">
-    <h3><i class="fas fa-lightbulb"></i> Recomendaciones</h3>
-    <div id="recomendaciones" class="recomendaciones-list">
-      <!-- Las recomendaciones se generarán dinámicamente -->
+    
+    <div class="table-container full-width">
+      <h3>Detalle por Categoría</h3>
+      <div class="table-responsive">
+        <table id="categoriasTable">
+          <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Presupuesto</th>
+              <th>Gastado</th>
+              <th>Disponible</th>
+              <th>% Utilizado</th>
+            </tr>
+          </thead>
+          <tbody id="categoriasTableBody">
+            <!-- Los datos se cargarán dinámicamente -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    
+    <div class="table-container full-width">
+      <h3>Transacciones Recientes</h3>
+      <div class="table-responsive">
+        <table id="transaccionesTable">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Categoría</th>
+              <th>Descripción</th>
+              <th>Monto</th>
+              <th>Tipo</th>
+            </tr>
+          </thead>
+          <tbody id="transaccionesTableBody">
+            <!-- Los datos se cargarán dinámicamente -->
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Configurar eventos
-  document.getElementById('refreshResumen').addEventListener('click', function() {
-    loadResumenData();
-  });
-  
-  document.getElementById('exportResumenPDF').addEventListener('click', function() {
-    generateResumenPDF();
-  });
-  
-  // Cargar datos iniciales
-  loadResumenData();
+  initializeResumen();
 });
 
+function initializeResumen() {
+  // Cargar datos del resumen
+  loadResumenData();
+  
+  // Configurar evento para cambio de periodo
+  const periodoSelect = document.getElementById('resumenPeriodo');
+  if (periodoSelect) {
+    periodoSelect.addEventListener('change', function() {
+      loadResumenData();
+    });
+  }
+  
+  // Configurar botón de exportación
+  const exportBtn = document.getElementById('exportResumen');
+  if (exportBtn) {
+    exportBtn.addEventListener('click', exportResumenData);
+  }
+}
+
 function loadResumenData() {
+  const periodo = document.getElementById('resumenPeriodo').value;
+  
+  if (periodo === 'mensual') {
+    loadResumenMensual();
+  } else {
+    loadResumenAnual();
+  }
+}
+
+function loadResumenMensual() {
   const k = ensureMonth();
-  const m = state[k];
   
-  // Actualizar fecha de generación
-  document.getElementById('resumenFechaGeneracion').textContent = new Date().toLocaleDateString('es-AR', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric'
-  });
+  // Calcular KPIs
+  const ingresos = calcularTotalIngresos(k);
+  const gastos = calcularTotalGastos(k);
+  const balance = ingresos - gastos;
+  const ahorro = calcularAhorro(k);
   
-  document.getElementById('resumenMesActual').textContent = document.getElementById('mesActualDisplay').textContent;
+  // Actualizar KPIs
+  document.getElementById('kpiIngresos').textContent = fmt(ingresos);
+  document.getElementById('kpiGastos').textContent = fmt(gastos);
+  document.getElementById('kpiBalance').textContent = fmt(balance);
+  document.getElementById('kpiAhorro').textContent = fmt(ahorro);
   
-  // Calcular y mostrar resumen
-  calcularResumenGeneral(m);
-  calcularDistribucionGastos(m);
-  calcularComparativaMensual(k);
-  calcularTendencias(m);
-  generarRecomendaciones(m);
+  // Calcular tendencias (comparación con mes anterior)
+  const tendencias = calcularTendencias(k);
+  document.getElementById('kpiIngresosTrend').innerHTML = tendencias.ingresos;
+  document.getElementById('kpiGastosTrend').innerHTML = tendencias.gastos;
+  document.getElementById('kpiBalanceTrend').innerHTML = tendencias.balance;
+  document.getElementById('kpiAhorroTrend').innerHTML = tendencias.ahorro;
+  
+  // Cargar gráficos
+  renderGastosChart(k);
+  renderEvolucionChart(k);
+  
+  // Cargar tablas
+  loadCategoriasTable(k);
+  loadTransaccionesTable(k);
 }
 
-function calcularResumenGeneral(m) {
-  // Ingresos (sueldo)
-  const ingresos = (m.sueldo || []).reduce((sum, record) => sum + record.monto, 0);
-  const ingresosCount = (m.sueldo || []).length;
-  
-  // Gastos por categoría
-  const categorias = [
-    'servicios', 'mama', 'delivery', 'transporte', 'mascotas',
-    'salud', 'deportes', 'salidas', 'cochera', 'lucy', 'cristina'
-  ];
-  
-  let gastosTotal = 0;
-  let categoriasConGastos = 0;
-  
-  categorias.forEach(cat => {
-    const gastoCategoria = (m[cat] || []).reduce((sum, record) => sum + record.monto, 0);
-    gastosTotal += gastoCategoria;
-    if (gastoCategoria > 0) categoriasConGastos++;
-  });
-  
-  // Tarjetas de crédito
-  const tarjetasUtilizado = (m.tarjetas?.ciudad?.utilizado || 0) + (m.tarjetas?.naranja?.utilizado || 0);
-  gastosTotal += tarjetasUtilizado;
-  
-  // Balance
-  const balance = ingresos - gastosTotal;
-  const ahorroPotencial = Math.max(0, balance);
-  const porcentajeAhorro = ingresos > 0 ? (ahorroPotencial / ingresos * 100).toFixed(1) : 0;
-  
-  // Actualizar UI
-  document.getElementById('resumenIngresos').textContent = fmt(ingresos);
-  document.getElementById('resumenIngresosDetalle').textContent = `${ingresosCount} registro${ingresosCount !== 1 ? 's' : ''}`;
-  
-  document.getElementById('resumenGastos').textContent = fmt(gastosTotal);
-  document.getElementById('resumenGastosDetalle').textContent = `${categoriasConGastos} categoría${categoriasConGastos !== 1 ? 's' : ''}`;
-  
-  document.getElementById('resumenBalance').textContent = fmt(balance);
-  document.getElementById('resumenBalanceDetalle').textContent = balance >= 0 ? 'Positivo' : 'Negativo';
-  
-  const balanceCard = document.getElementById('resumenBalanceCard');
-  balanceCard.className = `summary-card ${balance >= 0 ? 'positive' : 'negative'}`;
-  
-  document.getElementById('resumenAhorro').textContent = fmt(ahorroPotencial);
-  document.getElementById('resumenAhorroDetalle').textContent = `${porcentajeAhorro}% del ingreso`;
-}
-
-function calcularDistribucionGastos(m) {
-  const categorias = [
-    { key: 'servicios', name: 'Servicios', color: '#FF6384' },
-    { key: 'mama', name: 'Mamá', color: '#36A2EB' },
-    { key: 'delivery', name: 'Delivery', color: '#FFCE56' },
-    { key: 'transporte', name: 'Transporte', color: '#4BC0C0' },
-    { key: 'mascotas', name: 'Mascotas', color: '#9966FF' },
-    { key: 'salud', name: 'Salud', color: '#FF9F40' },
-    { key: 'deportes', name: 'Deportes', color: '#FF6384' },
-    { key: 'salidas', name: 'Salidas', color: '#C9CBCF' },
-    { key: 'cochera', name: 'Cochera', color: '#4BC0C0' },
-    { key: 'lucy', name: 'Lucy', color: '#36A2EB' },
-    { key: 'cristina', name: 'Cristina', color: '#FFCE56' },
-    { key: 'tarjetas', name: 'Tarjetas', color: '#FF9F40' }
-  ];
-  
-  let gastosData = [];
-  let totalGastos = 0;
-  
-  categorias.forEach(cat => {
-    let monto = 0;
-    
-    if (cat.key === 'tarjetas') {
-      monto = (m.tarjetas?.ciudad?.utilizado || 0) + (m.tarjetas?.naranja?.utilizado || 0);
-    } else {
-      monto = (m[cat.key] || []).reduce((sum, record) => sum + record.monto, 0);
-    }
-    
-    if (monto > 0) {
-      gastosData.push({
-        name: cat.name,
-        monto: monto,
-        color: cat.color
-      });
-      totalGastos += monto;
-    }
-  });
-  
-  // Actualizar gráfico
-  actualizarGraficoGastos(gastosData, totalGastos);
-  
-  // Actualizar lista de categorías
-  actualizarListaCategorias(gastosData, totalGastos);
-}
-
-function actualizarGraficoGastos(gastosData, totalGastos) {
-  const canvas = document.getElementById('gastosChart');
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  if (gastosData.length === 0) {
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#666';
-    ctx.textAlign = 'center';
-    ctx.fillText('No hay gastos para mostrar', canvas.width / 2, canvas.height / 2);
-    return;
-  }
-  
-  // Dibujar gráfico de torta
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const radius = Math.min(centerX, centerY) - 20;
-  
-  let startAngle = 0;
-  
-  gastosData.forEach((item, index) => {
-    const sliceAngle = (item.monto / totalGastos) * 2 * Math.PI;
-    
-    ctx.beginPath();
-    ctx.moveTo(centerX, centerY);
-    ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
-    ctx.closePath();
-    
-    ctx.fillStyle = item.color;
-    ctx.fill();
-    
-    startAngle += sliceAngle;
-  });
-  
-  // Dibujar leyenda
-  const legendX = 20;
-  let legendY = 20;
-  
-  gastosData.forEach((item, index) => {
-    ctx.fillStyle = item.color;
-    ctx.fillRect(legendX, legendY, 15, 15);
-    
-    ctx.fillStyle = '#333';
-    ctx.font = '12px Arial';
-    ctx.fillText(`${item.name}: ${fmt(item.monto)} (${((item.monto / totalGastos) * 100).toFixed(1)}%)`, legendX + 20, legendY + 12);
-    
-    legendY += 20;
-  });
-}
-
-function actualizarListaCategorias(gastosData, totalGastos) {
-  const container = document.getElementById('gastosCategorias');
-  
-  if (gastosData.length === 0) {
-    container.innerHTML = '<p class="no-data">No hay gastos registrados</p>';
-    return;
-  }
-  
-  // Ordenar por monto (descendente)
-  const sortedData = [...gastosData].sort((a, b) => b.monto - a.monto);
-  
-  container.innerHTML = sortedData.map(item => {
-    const porcentaje = ((item.monto / totalGastos) * 100).toFixed(1);
-    return `
-      <div class="categoria-item">
-        <div class="categoria-color" style="background-color: ${item.color}"></div>
-        <div class="categoria-info">
-          <span class="categoria-nombre">${item.name}</span>
-          <span class="categoria-monto">${fmt(item.monto)}</span>
-        </div>
-        <div class="categoria-porcentaje">${porcentaje}%</div>
-      </div>
-    `;
-  }).join('');
-}
-
-function calcularComparativaMensual(k) {
-  const mesActual = k;
-  const [year, month] = mesActual.split('-').map(Number);
-  
-  // Calcular mes anterior
-  let mesAnteriorYear = year;
-  let mesAnteriorMonth = month - 1;
-  
-  if (mesAnteriorMonth === 0) {
-    mesAnteriorMonth = 12;
-    mesAnteriorYear = year - 1;
-  }
-  
-  const mesAnteriorKey = `${mesAnteriorYear}-${mesAnteriorMonth.toString().padStart(2, '0')}`;
-  
-  // Gastos mes actual
-  const mActual = state[mesActual] || {};
-  const gastosActual = calcularTotalGastos(mActual);
-  
-  // Gastos mes anterior
-  const mAnterior = state[mesAnteriorKey] || {};
-  const gastosAnterior = calcularTotalGastos(mAnterior);
-  
-  // Diferencia
-  const diferencia = gastosActual - gastosAnterior;
-  const porcentajeDiferencia = gastosAnterior > 0 ? (diferencia / gastosAnterior * 100).toFixed(1) : 0;
-  
-  // Actualizar UI
-  document.getElementById('comparativaActual').textContent = fmt(gastosActual);
-  document.getElementById('comparativaActualDetalle').textContent = 'Este mes';
-  
-  document.getElementById('comparativaAnterior').textContent = fmt(gastosAnterior);
-  document.getElementById('comparativaAnteriorDetalle').textContent = 'Mes anterior';
-  
-  document.getElementById('comparativaDiferencia').textContent = fmt(Math.abs(diferencia));
-  document.getElementById('comparativaDiferenciaDetalle').textContent = 
-    `${diferencia >= 0 ? '+' : ''}${porcentajeDiferencia}%`;
-  
-  const diferenciaElement = document.getElementById('comparativaDiferencia');
-  diferenciaElement.className = `comparativa-monto ${diferencia >= 0 ? 'positive' : 'negative'}`;
-}
-
-function calcularTotalGastos(m) {
-  const categorias = [
-    'servicios', 'mama', 'delivery', 'transporte', 'mascotas',
-    'salud', 'deportes', 'salidas', 'cochera', 'lucy', 'cristina'
-  ];
-  
+function calcularTotalIngresos(k) {
   let total = 0;
   
-  categorias.forEach(cat => {
-    total += (m[cat] || []).reduce((sum, record) => sum + record.monto, 0);
-  });
+  // Sueldo
+  if (state[k].sueldo) {
+    total += state[k].sueldo.reduce((sum, record) => sum + record.monto, 0);
+  }
   
-  // Agregar tarjetas
-  total += (m.tarjetas?.ciudad?.utilizado || 0) + (m.tarjetas?.naranja?.utilizado || 0);
+  // Otros ingresos (puedes agregar más categorías aquí)
   
   return total;
 }
 
-function calcularTendencias(m) {
-  const totalGastos = calcularTotalGastos(m);
+function calcularTotalGastos(k) {
+  let total = 0;
   
-  // Calcular montos por categoría clave
-  const delivery = (m.delivery || []).reduce((sum, record) => sum + record.monto, 0);
-  const transporte = (m.transporte || []).reduce((sum, record) => sum + record.monto, 0);
-  const servicios = (m.servicios || []).reduce((sum, record) => sum + record.monto, 0);
-  const tarjetas = (m.tarjetas?.ciudad?.utilizado || 0) + (m.tarjetas?.naranja?.utilizado || 0);
+  // Servicios
+  if (state[k].servicios) {
+    total += state[k].servicios.reduce((sum, record) => sum + record.monto, 0);
+  }
   
-  // Calcular porcentajes
-  const pctDelivery = totalGastos > 0 ? (delivery / totalGastos * 100).toFixed(1) : 0;
-  const pctTransporte = totalGastos > 0 ? (transporte / totalGastos * 100).toFixed(1) : 0;
-  const pctServicios = totalGastos > 0 ? (servicios / totalGastos * 100).toFixed(1) : 0;
-  const pctTarjetas = totalGastos > 0 ? (tarjetas / totalGastos * 100).toFixed(1) : 0;
+  // Mamá
+  if (state[k].mama) {
+    total += state[k].mama.reduce((sum, record) => sum + record.monto, 0);
+  }
   
-  // Actualizar UI
-  document.getElementById('tendenciaDelivery').textContent = fmt(delivery);
-  document.getElementById('tendenciaDeliveryVar').textContent = `${pctDelivery}% del total`;
+  // Tarjetas
+  if (state[k].tarjetas) {
+    total += state[k].tarjetas.reduce((sum, record) => sum + record.monto, 0);
+  }
   
-  document.getElementById('tendenciaTransporte').textContent = fmt(transporte);
-  document.getElementById('tendenciaTransporteVar').textContent = `${pctTransporte}% del total`;
+  // Delivery
+  if (state[k].delivery) {
+    total += state[k].delivery.reduce((sum, record) => sum + record.monto, 0);
+  }
   
-  document.getElementById('tendenciaServicios').textContent = fmt(servicios);
-  document.getElementById('tendenciaServiciosVar').textContent = `${pctServicios}% del total`;
+  // Transporte
+  if (state[k].transporte) {
+    total += state[k].transporte.reduce((sum, record) => sum + record.monto, 0);
+  }
   
-  document.getElementById('tendenciaTarjetas').textContent = fmt(tarjetas);
-  document.getElementById('tendenciaTarjetasVar').textContent = `${pctTarjetas}% del total`;
+  // Mascotas
+  if (state[k].mascotas) {
+    total += state[k].mascotas.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  // Salud
+  if (state[k].salud) {
+    total += state[k].salud.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  // Deportes
+  if (state[k].deportes) {
+    total += state[k].deportes.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  // Salidas
+  if (state[k].salidas) {
+    total += state[k].salidas.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  // Cochera
+  if (state[k].cochera) {
+    total += state[k].cochera.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  // Lucy
+  if (state[k].lucy) {
+    total += state[k].lucy.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  // Cristina
+  if (state[k].cristina) {
+    total += state[k].cristina.reduce((sum, record) => sum + record.monto, 0);
+  }
+  
+  return total;
 }
 
-function generarRecomendaciones(m) {
-  const container = document.getElementById('recomendaciones');
-  const recomendaciones = [];
-  
-  const totalGastos = calcularTotalGastos(m);
-  const ingresos = (m.sueldo || []).reduce((sum, record) => sum + record.monto, 0);
-  const balance = ingresos - totalGastos;
-  
-  // Análisis de categorías
-  const delivery = (m.delivery || []).reduce((sum, record) => sum + record.monto, 0);
-  const pctDelivery = totalGastos > 0 ? (delivery / totalGastos * 100) : 0;
-  
-  const tarjetas = (m.tarjetas?.ciudad?.utilizado || 0) + (m.tarjetas?.naranja?.utilizado || 0);
-  const pctTarjetas = totalGastos > 0 ? (tarjetas / totalGastos * 100) : 0;
-  
-  // Generar recomendaciones basadas en el análisis
-  if (balance < 0) {
-    recomendaciones.push({
-      tipo: 'urgente',
-      mensaje: 'Tu balance es negativo. Considera reducir gastos no esenciales.'
-    });
-  }
-  
-  if (pctDelivery > 20) {
-    recomendaciones.push({
-      tipo: 'advertencia',
-      mensaje: 'El delivery representa más del 20% de tus gastos. Podrías considerar cocinar más en casa.'
-    });
-  }
-  
-  if (pctTarjetas > 30) {
-    recomendaciones.push({
-      tipo: 'advertencia', 
-      mensaje: 'El uso de tarjetas es elevado. Revisa si puedes reducir consumos con tarjeta.'
-    });
-  }
-  
-  if (balance > (ingresos * 0.2)) {
-    recomendaciones.push({
-      tipo: 'positivo',
-      mensaje: '¡Excelente! Tienes un buen margen de ahorro. Considera invertir el excedente.'
-    });
-  }
-  
-  if (recomendaciones.length === 0) {
-    recomendaciones.push({
-      tipo: 'info',
-      mensaje: 'Tus finanzas se ven saludables. Continúa con el buen manejo de tus gastos.'
-    });
-  }
-  
-  // Mostrar recomendaciones
-  container.innerHTML = recomendaciones.map(rec => `
-    <div class="recomendacion ${rec.tipo}">
-      <i class="fas fa-${getRecomendacionIcon(rec.tipo)}"></i>
-      <span>${rec.mensaje}</span>
-    </div>
-  `).join('');
+function calcularAhorro(k) {
+  const ingresos = calcularTotalIngresos(k);
+  const gastos = calcularTotalGastos(k);
+  return Math.max(0, ingresos - gastos);
 }
 
-function getRecomendacionIcon(tipo) {
-  const icons = {
-    'urgente': 'exclamation-triangle',
-    'advertencia': 'exclamation-circle',
-    'positivo': 'check-circle',
-    'info': 'info-circle'
+function calcularTendencias(k) {
+  // Obtener mes anterior
+  const currentDate = new Date(currentSelectedYear, currentSelectedMonth);
+  const prevDate = new Date(currentDate);
+  prevDate.setMonth(prevDate.getMonth() - 1);
+  
+  const prevKey = `${prevDate.getFullYear()}-${(prevDate.getMonth() + 1).toString().padStart(2, '0')}`;
+  
+  // Calcular valores del mes anterior
+  const prevIngresos = state[prevKey] ? calcularTotalIngresos(prevKey) : 0;
+  const prevGastos = state[prevKey] ? calcularTotalGastos(prevKey) : 0;
+  const prevBalance = prevIngresos - prevGastos;
+  const prevAhorro = state[prevKey] ? calcularAhorro(prevKey) : 0;
+  
+  // Calcular valores actuales
+  const currentIngresos = calcularTotalIngresos(k);
+  const currentGastos = calcularTotalGastos(k);
+  const currentBalance = currentIngresos - currentGastos;
+  const currentAhorro = calcularAhorro(k);
+  
+  // Calcular diferencias porcentuales
+  const diffIngresos = prevIngresos ? ((currentIngresos - prevIngresos) / prevIngresos) * 100 : 0;
+  const diffGastos = prevGastos ? ((currentGastos - prevGastos) / prevGastos) * 100 : 0;
+  const diffBalance = prevBalance ? ((currentBalance - prevBalance) / Math.abs(prevBalance)) * 100 : 0;
+  const diffAhorro = prevAhorro ? ((currentAhorro - prevAhorro) / prevAhorro) * 100 : 0;
+  
+  // Formatear tendencias
+  return {
+    ingresos: formatTrend(diffIngresos),
+    gastos: formatTrend(diffGastos),
+    balance: formatTrend(diffBalance),
+    ahorro: formatTrend(diffAhorro)
   };
-  return icons[tipo] || 'info-circle';
 }
 
-function generateResumenPDF() {
-  // Usar la función de generación de PDF existente
-  generatePDF();
+function formatTrend(value) {
+  if (isNaN(value) || value === 0) return '--';
+  
+  const absValue = Math.abs(value).toFixed(1);
+  const icon = value > 0 ? '▲' : '▼';
+  const color = value > 0 ? '#10b981' : '#ef4444';
+  
+  return `<span style="color: ${color}">${icon} ${absValue}%</span>`;
+}
+
+function renderGastosChart(k) {
+  const ctx = document.getElementById('gastosChartCanvas');
+  if (!ctx) return;
+  
+  // Datos de ejemplo para el gráfico de gastos
+  const gastosPorCategoria = {
+    'Servicios': state[k].servicios ? state[k].servicios.reduce((sum, record) => sum + record.monto, 0) : 0,
+    'Tarjetas': state[k].tarjetas ? state[k].tarjetas.reduce((sum, record) => sum + record.monto, 0) : 0,
+    'Salidas': state[k].salidas ? state[k].salidas.reduce((sum, record) => sum + record.monto, 0) : 0,
+    'Delivery': state[k].delivery ? state[k].delivery.reduce((sum, record) => sum + record.monto, 0) : 0,
+    'Transporte': state[k].transporte ? state[k].transporte.reduce((sum, record) => sum + record.monto, 0) : 0,
+    'Otros': calcularTotalGastos(k) - (
+      (state[k].servicios ? state[k].servicios.reduce((sum, record) => sum + record.monto, 0) : 0) +
+      (state[k].tarjetas ? state[k].tarjetas.reduce((sum, record) => sum + record.monto, 0) : 0) +
+      (state[k].salidas ? state[k].salidas.reduce((sum, record) => sum + record.monto, 0) : 0) +
+      (state[k].delivery ? state[k].delivery.reduce((sum, record) => sum + record.monto, 0) : 0) +
+      (state[k].transporte ? state[k].transporte.reduce((sum, record) => sum + record.monto, 0) : 0)
+    )
+  };
+  
+  // Filtrar categorías con gastos
+  const categorias = Object.keys(gastosPorCategoria).filter(cat => gastosPorCategoria[cat] > 0);
+  const montos = categorias.map(cat => gastosPorCategoria[cat]);
+  
+  // Colores para el gráfico
+  const colores = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#6b7280'];
+  
+  // Renderizar gráfico (implementación básica)
+  ctx.innerHTML = `
+    <div style="padding: 20px; text-align: center;">
+      <h4>Distribución de Gastos</h4>
+      <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; margin-top: 20px;">
+        ${categorias.map((categoria, index) => `
+          <div style="text-align: center;">
+            <div style="width: 50px; height: 50px; background: ${colores[index]}; border-radius: 50%; margin: 0 auto 10px;"></div>
+            <div style="font-weight: 600;">${categoria}</div>
+            <div style="font-size: 0.9rem; color: #6b7280;">${fmt(gastosPorCategoria[categoria])}</div>
+          </div>
+        `).join('')}
+      </div>
+      ${categorias.length === 0 ? '<p style="color: #6b7280; font-style: italic;">No hay datos de gastos para mostrar</p>' : ''}
+    </div>
+  `;
+}
+
+function renderEvolucionChart(k) {
+  const ctx = document.getElementById('evolucionChartCanvas');
+  if (!ctx) return;
+  
+  // Datos de ejemplo para el gráfico de evolución
+  const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+  const ingresosData = Array(12).fill(0).map(() => Math.random() * 5000000);
+  const gastosData = Array(12).fill(0).map(() => Math.random() * 3000000);
+  
+  // Renderizar gráfico (implementación básica)
+  ctx.innerHTML = `
+    <div style="padding: 20px;">
+      <h4 style="text-align: center; margin-bottom: 20px;">Evolución Mensual</h4>
+      <div style="display: flex; align-items: end; height: 200px; gap: 10px; justify-content: center;">
+        ${meses.map((mes, index) => {
+          const ingresoHeight = (ingresosData[index] / 5000000) * 150;
+          const gastoHeight = (gastosData[index] / 3000000) * 150;
+          return `
+            <div style="display: flex; flex-direction: column; align-items: center; height: 100%;">
+              <div style="display: flex; align-items: end; gap: 3px; height: 150px;">
+                <div style="width: 15px; height: ${ingresoHeight}px; background: #10b981; border-radius: 3px 3px 0 0;"></div>
+                <div style="width: 15px; height: ${gastoHeight}px; background: #ef4444; border-radius: 3px 3px 0 0;"></div>
+              </div>
+              <div style="margin-top: 10px; font-size: 0.8rem;">${mes}</div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+      <div style="display: flex; justify-content: center; gap: 20px; margin-top: 20px;">
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <div style="width: 15px; height: 15px; background: #10b981; border-radius: 3px;"></div>
+          <span>Ingresos</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 5px;">
+          <div style="width: 15px; height: 15px; background: #ef4444; border-radius: 3px;"></div>
+          <span>Gastos</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function loadCategoriasTable(k) {
+  const tbody = document.getElementById('categoriasTableBody');
+  if (!tbody) return;
+  
+  // Datos de ejemplo para la tabla de categorías
+  const categorias = [
+    { nombre: 'Servicios', presupuesto: 50000, gastado: state[k].servicios ? state[k].servicios.reduce((sum, record) => sum + record.monto, 0) : 0 },
+    { nombre: 'Tarjetas', presupuesto: 100000, gastado: state[k].tarjetas ? state[k].tarjetas.reduce((sum, record) => sum + record.monto, 0) : 0 },
+    { nombre: 'Salidas', presupuesto: 30000, gastado: state[k].salidas ? state[k].salidas.reduce((sum, record) => sum + record.monto, 0) : 0 },
+    { nombre: 'Delivery', presupuesto: 20000, gastado: state[k].delivery ? state[k].delivery.reduce((sum, record) => sum + record.monto, 0) : 0 },
+    { nombre: 'Transporte', presupuesto: 15000, gastado: state[k].transporte ? state[k].transporte.reduce((sum, record) => sum + record.monto, 0) : 0 }
+  ];
+  
+  tbody.innerHTML = categorias.map(cat => {
+    const disponible = cat.presupuesto - cat.gastado;
+    const porcentaje = cat.presupuesto > 0 ? (cat.gastado / cat.presupuesto) * 100 : 0;
+    const porcentajeClass = porcentaje > 90 ? 'danger' : porcentaje > 75 ? 'warning' : 'success';
+    
+    return `
+      <tr>
+        <td>${cat.nombre}</td>
+        <td>${fmt(cat.presupuesto)}</td>
+        <td>${fmt(cat.gastado)}</td>
+        <td>${fmt(disponible)}</td>
+        <td>
+          <div class="progress-bar">
+            <div class="progress-fill ${porcentajeClass}" style="width: ${Math.min(porcentaje, 100)}%"></div>
+            <span class="progress-text">${porcentaje.toFixed(1)}%</span>
+          </div>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function loadTransaccionesTable(k) {
+  const tbody = document.getElementById('transaccionesTableBody');
+  if (!tbody) return;
+  
+  // Recolectar todas las transacciones
+  let transacciones = [];
+  
+  // Función auxiliar para agregar transacciones
+  const agregarTransacciones = (categoria, datos) => {
+    if (datos && Array.isArray(datos)) {
+      datos.forEach(record => {
+        transacciones.push({
+          fecha: record.fecha,
+          categoria: categoria,
+          descripcion: record.descripcion || record.lugar || record.servicio || 'Sin descripción',
+          monto: record.monto,
+          tipo: 'gasto'
+        });
+      });
+    }
+  };
+  
+  // Agregar transacciones de cada categoría
+  agregarTransacciones('Servicios', state[k].servicios);
+  agregarTransacciones('Mamá', state[k].mama);
+  agregarTransacciones('Tarjetas', state[k].tarjetas);
+  agregarTransacciones('Delivery', state[k].delivery);
+  agregarTransacciones('Transporte', state[k].transporte);
+  agregarTransacciones('Mascotas', state[k].mascotas);
+  agregarTransacciones('Salud', state[k].salud);
+  agregarTransacciones('Deportes', state[k].deportes);
+  agregarTransacciones('Salidas', state[k].salidas);
+  agregarTransacciones('Cochera', state[k].cochera);
+  agregarTransacciones('Lucy', state[k].lucy);
+  agregarTransacciones('Cristina', state[k].cristina);
+  
+  // Agregar ingresos
+  if (state[k].sueldo) {
+    state[k].sueldo.forEach(record => {
+      transacciones.push({
+        fecha: record.fecha,
+        categoria: 'Sueldo',
+        descripcion: 'Ingreso de sueldo',
+        monto: record.monto,
+        tipo: 'ingreso'
+      });
+    });
+  }
+  
+  // Ordenar por fecha (más reciente primero)
+  transacciones.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  
+  // Limitar a las 10 más recientes
+  transacciones = transacciones.slice(0, 10);
+  
+  tbody.innerHTML = transacciones.map(trans => `
+    <tr>
+      <td>${formatDate(trans.fecha)}</td>
+      <td>${trans.categoria}</td>
+      <td>${trans.descripcion}</td>
+      <td class="${trans.tipo === 'ingreso' ? 'income' : 'expense'}">${fmt(trans.monto)}</td>
+      <td><span class="badge ${trans.tipo === 'ingreso' ? 'badge-success' : 'badge-danger'}">${trans.tipo === 'ingreso' ? 'Ingreso' : 'Gasto'}</span></td>
+    </tr>
+  `).join('');
+  
+  if (transacciones.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align: center; padding: 40px; color: #6b7280; font-style: italic;">
+          No hay transacciones para mostrar
+        </td>
+      </tr>
+    `;
+  }
+}
+
+function loadResumenAnual() {
+  // Implementación básica para vista anual
+  document.getElementById('kpiIngresos').textContent = '--';
+  document.getElementById('kpiGastos').textContent = '--';
+  document.getElementById('kpiBalance').textContent = '--';
+  document.getElementById('kpiAhorro').textContent = '--';
+  
+  document.getElementById('kpiIngresosTrend').innerHTML = '--';
+  document.getElementById('kpiGastosTrend').innerHTML = '--';
+  document.getElementById('kpiBalanceTrend').innerHTML = '--';
+  document.getElementById('kpiAhorroTrend').innerHTML = '--';
+  
+  document.getElementById('gastosChartCanvas').innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">Vista anual en desarrollo</p>';
+  document.getElementById('evolucionChartCanvas').innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">Vista anual en desarrollo</p>';
+  document.getElementById('categoriasTableBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #6b7280;">Vista anual en desarrollo</td></tr>';
+  document.getElementById('transaccionesTableBody').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 20px; color: #6b7280;">Vista anual en desarrollo</td></tr>';
+}
+
+function exportResumenData() {
+  const k = ensureMonth();
+  const data = {
+    periodo: `${currentSelectedYear}-${(currentSelectedMonth + 1).toString().padStart(2, '0')}`,
+    ingresos: calcularTotalIngresos(k),
+    gastos: calcularTotalGastos(k),
+    balance: calcularTotalIngresos(k) - calcularTotalGastos(k),
+    ahorro: calcularAhorro(k),
+    detalle: state[k]
+  };
+  
+  const dataStr = JSON.stringify(data, null, 2);
+  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+  
+  const exportFileDefaultName = `resumen_finanzas_${k}.json`;
+  
+  const linkElement = document.createElement('a');
+  linkElement.setAttribute('href', dataUri);
+  linkElement.setAttribute('download', exportFileDefaultName);
+  linkElement.click();
 }
 </script>
 
 <style>
-.resumen-header {
+.dashboard-container {
+  padding: 20px;
+}
+
+.summary-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 30px;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 15px;
 }
 
-.resumen-periodo h3 {
-  margin: 0;
-  color: #111827;
-  font-size: 1.5rem;
-}
-
-.resumen-fecha {
-  color: #6b7280;
-  margin: 5px 0 0 0;
-  font-size: 0.9rem;
-}
-
-.resumen-actions {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-.resumen-section {
-  margin-bottom: 40px;
-  padding: 25px;
-  background: #f8fafc;
-  border-radius: 12px;
-}
-
-.resumen-section h3 {
-  margin: 0 0 20px 0;
-  color: #111827;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.summary-card.positive {
-  border-left: 4px solid #22c55e;
-}
-
-.summary-card.negative {
-  border-left: 4px solid #ef4444;
-}
-
-.summary-detail {
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-top: 5px;
-}
-
-.chart-container {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.gastos-detalle {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-}
-
-.categorias-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.categoria-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px;
+.period-selector select {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
   border-radius: 6px;
-  background: #f8fafc;
-}
-
-.categoria-color {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-}
-
-.categoria-info {
-  flex: 1;
-  display: flex;
-  justify-content: space-between;
-}
-
-.categoria-nombre {
-  font-weight: 600;
-  color: #111827;
-}
-
-.categoria-monto {
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.categoria-porcentaje {
-  font-weight: 700;
-  color: #111827;
-  min-width: 50px;
-  text-align: right;
-}
-
-.comparativa-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-.comparativa-item {
   background: white;
-  padding: 20px;
-  border-radius: 8px;
-  text-align: center;
+  color: #111827;
 }
 
-.comparativa-item h5 {
-  margin: 0 0 10px 0;
-  color: #6b7280;
-  font-size: 0.9rem;
-}
-
-.comparativa-monto {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 5px;
-}
-
-.comparativa-monto.positive {
-  color: #22c55e;
-}
-
-.comparativa-monto.negative {
-  color: #ef4444;
-}
-
-.comparativa-detalle {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.tendencias-grid {
+.kpi-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
 }
 
-.tendencia-item {
+.kpi-card {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
-  gap: 15px;
-  background: white;
-  padding: 15px;
-  border-radius: 8px;
+  gap: 16px;
 }
 
-.tendencia-icon {
-  width: 40px;
-  height: 40px;
-  background: #e0f2fe;
-  border-radius: 8px;
+.kpi-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #0369a1;
+  font-size: 24px;
+  color: white;
 }
 
-.tendencia-info {
-  flex: 1;
+.kpi-icon.income {
+  background: linear-gradient(135deg, #10b981, #059669);
 }
 
-.tendencia-info h5 {
-  margin: 0 0 5px 0;
+.kpi-icon.expense {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.kpi-icon.balance {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+.kpi-icon.savings {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.kpi-content h3 {
+  margin: 0 0 8px 0;
+  font-size: 0.9rem;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+.kpi-value {
+  font-size: 1.8rem;
+  font-weight: 700;
   color: #111827;
+  margin-bottom: 4px;
+}
+
+.kpi-trend {
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-bottom: 30px;
+}
+
+.chart-container, .table-container {
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  border: 1px solid #e5e7eb;
+}
+
+.chart-container h3, .table-container h3 {
+  margin: 0 0 20px 0;
+  font-size: 1.1rem;
+  color: #111827;
+  font-weight: 600;
+}
+
+.chart-placeholder {
+  height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 2px dashed #d1d5db;
+}
+
+.full-width {
+  grid-column: 1 / -1;
+}
+
+.table-responsive {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background: #f8fafc;
+  font-weight: 600;
+  color: #374151;
   font-size: 0.9rem;
 }
 
-.tendencia-monto {
-  font-weight: 700;
-  color: #111827;
-  font-size: 1.1rem;
+td.income {
+  color: #10b981;
+  font-weight: 600;
 }
 
-.tendencia-variacion {
-  font-size: 0.8rem;
-  color: #6b7280;
-}
-
-.recomendaciones-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.recomendacion {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  padding: 15px;
-  border-radius: 8px;
-  background: white;
-}
-
-.recomendacion.urgente {
-  border-left: 4px solid #ef4444;
-}
-
-.recomendacion.urgente i {
+td.expense {
   color: #ef4444;
+  font-weight: 600;
 }
 
-.recomendacion.advertencia {
-  border-left: 4px solid #f59e0b;
+.badge {
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.recomendacion.advertencia i {
-  color: #f59e0b;
+.badge-success {
+  background: #d1fae5;
+  color: #065f46;
 }
 
-.recomendacion.positivo {
-  border-left: 4px solid #22c55e;
+.badge-danger {
+  background: #fee2e2;
+  color: #991b1b;
 }
 
-.recomendacion.positivo i {
-  color: #22c55e;
+.progress-bar {
+  position: relative;
+  height: 24px;
+  background: #f3f4f6;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-.recomendacion.info {
-  border-left: 4px solid #3b82f6;
+.progress-fill {
+  height: 100%;
+  border-radius: 12px;
+  transition: width 0.3s ease;
 }
 
-.recomendacion.info i {
-  color: #3b82f6;
+.progress-fill.success {
+  background: #10b981;
 }
 
-.no-data {
-  text-align: center;
-  color: #6b7280;
-  font-style: italic;
-  padding: 20px;
+.progress-fill.warning {
+  background: #f59e0b;
+}
+
+.progress-fill.danger {
+  background: #ef4444;
+}
+
+.progress-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 @media (max-width: 768px) {
-  .resumen-header {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .kpi-cards {
+    grid-template-columns: 1fr;
+  }
+  
+  .summary-header {
     flex-direction: column;
-  }
-  
-  .resumen-actions {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .comparativa-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .tendencias-grid {
-    grid-template-columns: 1fr;
+    align-items: stretch;
   }
 }
 </style>

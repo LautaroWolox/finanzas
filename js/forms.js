@@ -1,68 +1,14 @@
-// ======= Formularios y manejo de archivos =======
-function initForms() {
-  // Cargar formularios desde componentes
-  loadFormComponents();
-}
-
-async function loadFormComponents() {
-  const forms = [
-    'sueldo', 'servicios', 'mama', 'tarjetas', 'delivery', 
-    'transporte', 'mascotas', 'salud', 'deportes', 'salidas', 
-    'cochera', 'lucy', 'cristina', 'resumen'
-  ];
-  
-  for (const form of forms) {
-    try {
-      const response = await fetch(`components/forms/${form}.html`);
-      if (response.ok) {
-        // Guardar el HTML para usarlo cuando se necesite
-        window[`${form}FormHTML`] = await response.text();
-      }
-    } catch (error) {
-      console.error(`Error cargando formulario ${form}:`, error);
-    }
-  }
-}
-
-// ======= Manejo de archivos con cámara =======
-async function handleFileInput(inputElement, callback) {
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  
-  if (isMobile && window.showSaveFilePicker) {
-    // En móvil, ofrecer opción de cámara o galería
-    const options = {
-      title: 'Seleccionar comprobante',
-      options: [
-        {
-          description: 'Imágenes y PDF',
-          accept: {
-            'image/*': ['.png', '.jpg', '.jpeg'],
-            'application/pdf': ['.pdf']
-          }
-        }
-      ]
-    };
-    
-    try {
-      const handle = await window.showOpenFilePicker(options);
-      const file = await handle[0].getFile();
-      callback(file);
-    } catch (error) {
-      if (error.name !== 'AbortError') {
-        console.error('Error seleccionando archivo:', error);
-      }
-    }
-  } else {
-    // En desktop o navegadores sin soporte, usar input normal
-    inputElement.click();
-  }
-}
-
 // ======= Render de secciones =======
 function render(id) {
   const k = ensureMonth();
-  const m = state[k];
+  const m = state[k] || {};
   const el = $('#mainSection');
+  
+  if (!el) {
+    console.error('Elemento mainSection no encontrado');
+    return;
+  }
+  
   el.innerHTML = '';
 
   switch(id) {
@@ -112,7 +58,7 @@ function render(id) {
 }
 
 function renderSueldo(m) {
-  const formHTML = sueldoFormHTML || `
+  const formHTML = `
     <div class="form-container">
       <h2><i class="fas fa-money-bill-wave"></i> Sueldo</h2>
       <div class="form-grid">
@@ -144,23 +90,28 @@ function renderSueldo(m) {
           </button>
         </div>
       </div>
+      
+      <div class="records-section">
+        <h3>Registros de Sueldo</h3>
+        <div id="sueldoRecords" class="records-list">
+          ${renderSueldoRecords(m)}
+        </div>
+      </div>
     </div>
   `;
   
   $('#mainSection').innerHTML = formHTML;
   
-  // Inicializar calendario para fecha
-  initFormCalendar('sueldoFecha');
+  // Inicializar fecha actual
+  const today = new Date().toISOString().split('T')[0];
+  $('#sueldoFecha').value = today;
   
-  // Manejar archivo con cámara en móvil
+  // Manejar botón de archivo
   $('#sueldoFileBtn').addEventListener('click', () => {
-    handleFileInput($('#sueldoComprobante'), (file) => {
-      $('#sueldoFileName').textContent = file.name;
-      // Aquí puedes procesar el archivo según sea necesario
-    });
+    $('#sueldoComprobante').click();
   });
   
-  // También manejar cambio normal del input
+  // Manejar cambio de archivo
   $('#sueldoComprobante').addEventListener('change', (e) => {
     if (e.target.files.length > 0) {
       $('#sueldoFileName').textContent = e.target.files[0].name;
@@ -189,12 +140,43 @@ function renderSueldo(m) {
     save();
     alert('Sueldo guardado correctamente');
     renderKPIs();
-    clearForm('sueldo');
+    render('sueldo');
   });
 }
 
+function renderSueldoRecords(m) {
+  if (!m.sueldo || m.sueldo.length === 0) {
+    return '<p class="no-records">No hay registros de sueldo</p>';
+  }
+  
+  return m.sueldo.map((item, index) => `
+    <div class="record-item">
+      <div class="record-info">
+        <span class="record-date">${item.fecha}</span>
+        <span class="record-desc">${item.notas || 'Sin notas'}</span>
+        <span class="record-amount">$${item.monto.toLocaleString()}</span>
+      </div>
+      <div class="record-actions">
+        <button class="btn-icon danger" onclick="deleteSueldoRecord(${index})">
+          <i class="fas fa-trash"></i>
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteSueldoRecord(index) {
+  if (confirm('¿Estás seguro de que quieres eliminar este registro?')) {
+    const k = ensureMonth();
+    state[k].sueldo.splice(index, 1);
+    save();
+    render('sueldo');
+    renderKPIs();
+  }
+}
+
 function renderTarjetas(m) {
-  const formHTML = tarjetasFormHTML || `
+  const formHTML = `
     <div class="form-container">
       <h2><i class="fas fa-credit-card"></i> Tarjetas</h2>
       <div class="form-tabs">
@@ -218,13 +200,18 @@ function renderTarjetas(m) {
   $('#mainSection').innerHTML = formHTML;
   
   // Manejar tabs
-  $('.tab-btn').forEach(btn => {
+  document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      $('.tab-btn').forEach(b => b.classList.remove('active'));
-      $('.tab-content').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
       btn.classList.add('active');
-      $(`#${btn.dataset.tab}Tab`).classList.add('active');
+      document.getElementById(`${btn.dataset.tab}Tab`).classList.add('active');
     });
+  });
+  
+  // Inicializar cada tarjeta
+  ['naranja', 'visa', 'master'].forEach(tarjeta => {
+    initTarjetaForm(tarjeta);
   });
 }
 
@@ -259,18 +246,68 @@ function renderTarjetaForm(tarjeta, m) {
       </div>
       <div class="form-actions full-width">
         <button type="button" id="save${tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)}" class="btn-primary">
-          <i class="fas fa-save"></i> Guardar ${tarjeta}
+          <i class="fas fa-save"></i> Guardar ${tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)}
         </button>
       </div>
     </div>
     
     <div class="records-section">
-      <h3>Registros de ${tarjeta}</h3>
+      <h3>Registros de ${tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)}</h3>
       <div id="${tarjeta}Records" class="records-list">
         ${renderTarjetaRecords(tarjeta, m)}
       </div>
     </div>
   `;
+}
+
+function initTarjetaForm(tarjeta) {
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById(`${tarjeta}Fecha`);
+  if (fechaInput) fechaInput.value = today;
+  
+  const fileBtn = document.getElementById(`${tarjeta}FileBtn`);
+  const fileInput = document.getElementById(`${tarjeta}Comprobante`);
+  const fileName = document.getElementById(`${tarjeta}FileName`);
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  const saveBtn = document.getElementById(`save${tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)}`);
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => saveTarjetaRecord(tarjeta));
+  }
+}
+
+function saveTarjetaRecord(tarjeta) {
+  const k = ensureMonth();
+  const fecha = document.getElementById(`${tarjeta}Fecha`).value;
+  const monto = parseFloat(document.getElementById(`${tarjeta}Monto`).value);
+  const descripcion = document.getElementById(`${tarjeta}Descripcion`).value;
+  
+  if (!fecha || isNaN(monto)) {
+    alert('Por favor complete fecha y monto');
+    return;
+  }
+  
+  if (!state[k][tarjeta]) state[k][tarjeta] = [];
+  state[k][tarjeta].push({
+    fecha,
+    monto,
+    descripcion,
+    notas: document.getElementById(`${tarjeta}Notas`).value,
+    comprobante: document.getElementById(`${tarjeta}Comprobante`).files[0]?.name || ''
+  });
+  
+  save();
+  alert('Registro guardado correctamente');
+  renderKPIs();
+  render('tarjetas');
 }
 
 function renderTarjetaRecords(tarjeta, m) {
@@ -283,7 +320,7 @@ function renderTarjetaRecords(tarjeta, m) {
       <div class="record-info">
         <span class="record-date">${item.fecha}</span>
         <span class="record-desc">${item.descripcion || 'Sin descripción'}</span>
-        <span class="record-amount">$${item.monto}</span>
+        <span class="record-amount">$${item.monto.toLocaleString()}</span>
       </div>
       <div class="record-actions">
         <button class="btn-icon danger" onclick="deleteTarjetaRecord('${tarjeta}', ${index})">
@@ -305,9 +342,9 @@ function deleteTarjetaRecord(tarjeta, index) {
 }
 
 function renderGeneric(title, key, m, categories) {
-  const formHTML = window[`${key}FormHTML`] || `
+  const formHTML = `
     <div class="form-container">
-      <h2><i class="fas fa-${getIcon(key)}"></i> ${title}</h2>
+      <h2>${title}</h2>
       <div class="form-grid">
         <div class="form-group">
           <label for="${key}Fecha">Fecha:</label>
@@ -355,13 +392,13 @@ function renderGeneric(title, key, m, categories) {
   
   $('#mainSection').innerHTML = formHTML;
   
-  // Inicializar funcionalidad
-  initFormCalendar(`${key}Fecha`);
+  // Inicializar fecha actual
+  const today = new Date().toISOString().split('T')[0];
+  $(`#${key}Fecha`).value = today;
   
+  // Manejar archivo
   $(`#${key}FileBtn`).addEventListener('click', () => {
-    handleFileInput($(`#${key}Comprobante`), (file) => {
-      $(`#${key}FileName`).textContent = file.name;
-    });
+    $(`#${key}Comprobante`).click();
   });
   
   $(`#${key}Comprobante`).addEventListener('change', (e) => {
@@ -370,12 +407,13 @@ function renderGeneric(title, key, m, categories) {
     }
   });
   
+  // Guardar registro
   $(`#save${key.charAt(0).toUpperCase() + key.slice(1)}`).addEventListener('click', () => {
-    saveGenericRecord(key, categories);
+    saveGenericRecord(key);
   });
 }
 
-function saveGenericRecord(key, categories) {
+function saveGenericRecord(key) {
   const k = ensureMonth();
   const fecha = $(`#${key}Fecha`).value;
   const monto = parseFloat($(`#${key}Monto`).value);
@@ -412,7 +450,7 @@ function renderGenericRecords(key, m) {
         <span class="record-date">${item.fecha}</span>
         <span class="record-category">${item.categoria}</span>
         <span class="record-desc">${item.notas || ''}</span>
-        <span class="record-amount">$${item.monto}</span>
+        <span class="record-amount">${item.monto.toLocaleString()}</span>
       </div>
       <div class="record-actions">
         <button class="btn-icon danger" onclick="deleteGenericRecord('${key}', ${index})">
@@ -434,17 +472,17 @@ function deleteGenericRecord(key, index) {
 }
 
 function renderResumen(m) {
-  const formHTML = resumenFormHTML || `
+  const formHTML = `
     <div class="form-container">
       <h2><i class="fas fa-chart-bar"></i> Resumen Mensual</h2>
       <div class="summary-cards">
         <div class="summary-card">
           <h3>Ingresos</h3>
-          <div class="summary-amount" id="summaryIngresos">$0</div>
+          <div class="summary-amount positive" id="summaryIngresos">$0</div>
         </div>
         <div class="summary-card">
           <h3>Gastos</h3>
-          <div class="summary-amount" id="summaryGastos">$0</div>
+          <div class="summary-amount negative" id="summaryGastos">$0</div>
         </div>
         <div class="summary-card">
           <h3>Balance</h3>
@@ -489,7 +527,9 @@ function updateResumen(m) {
   const gastoCategorias = {
     servicios: (m.servicios || []).reduce((sum, item) => sum + item.monto, 0),
     mama: (m.mama || []).reduce((sum, item) => sum + item.monto, 0),
-    tarjetas: (m.tarjetas || []).reduce((sum, item) => sum + item.monto, 0),
+    naranja: (m.naranja || []).reduce((sum, item) => sum + item.monto, 0),
+    visa: (m.visa || []).reduce((sum, item) => sum + item.monto, 0),
+    master: (m.master || []).reduce((sum, item) => sum + item.monto, 0),
     delivery: (m.delivery || []).reduce((sum, item) => sum + item.monto, 0),
     transporte: (m.transporte || []).reduce((sum, item) => sum + item.monto, 0),
     mascotas: (m.mascotas || []).reduce((sum, item) => sum + item.monto, 0),
@@ -505,12 +545,12 @@ function updateResumen(m) {
   const balance = ingresos - gastosTotal;
   
   // Actualizar displays
-  $('#summaryIngresos').textContent = `$${ingresos.toLocaleString()}`;
-  $('#summaryGastos').textContent = `$${gastosTotal.toLocaleString()}`;
-  $('#summaryBalance').textContent = `$${balance.toLocaleString()}`;
+  $('#summaryIngresos').textContent = `${ingresos.toLocaleString()}`;
+  $('#summaryGastos').textContent = `${gastosTotal.toLocaleString()}`;
+  $('#summaryBalance').textContent = `${balance.toLocaleString()}`;
   $('#summaryBalance').className = `summary-amount ${balance >= 0 ? 'positive' : 'negative'}`;
   
-  // Renderizar gráfico si existe
+  // Renderizar gráfico
   renderExpensesChart(gastoCategorias);
 }
 
@@ -523,7 +563,11 @@ function renderExpensesChart(gastoCategorias) {
   const montos = categorias.map(cat => gastoCategorias[cat]);
   
   // Colores para el gráfico
-  const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384', '#36A2EB', '#FFCE56'];
+  const colors = [
+    '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', 
+    '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF6384', 
+    '#36A2EB', '#FFCE56', '#8B5CF6', '#EC4899'
+  ];
   
   // Dibujar gráfico simple
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -538,13 +582,16 @@ function renderExpensesChart(gastoCategorias) {
   
   const total = montos.reduce((sum, monto) => sum + monto, 0);
   let startAngle = 0;
+  const centerX = canvas.width / 2;
+  const centerY = canvas.height / 2;
+  const radius = Math.min(canvas.width, canvas.height) / 3;
   
   for (let i = 0; i < categorias.length; i++) {
     const sliceAngle = (montos[i] / total) * 2 * Math.PI;
     
     ctx.beginPath();
-    ctx.moveTo(canvas.width / 2, canvas.height / 2);
-    ctx.arc(canvas.width / 2, canvas.height / 2, Math.min(canvas.width, canvas.height) / 3, startAngle, startAngle + sliceAngle);
+    ctx.moveTo(centerX, centerY);
+    ctx.arc(centerX, centerY, radius, startAngle, startAngle + sliceAngle);
     ctx.closePath();
     
     ctx.fillStyle = colors[i % colors.length];
@@ -552,32 +599,4 @@ function renderExpensesChart(gastoCategorias) {
     
     startAngle += sliceAngle;
   }
-}
-
-function getIcon(key) {
-  const icons = {
-    sueldo: 'money-bill-wave',
-    servicios: 'home',
-    mama: 'female',
-    tarjetas: 'credit-card',
-    delivery: 'hamburger',
-    transporte: 'car',
-    mascotas: 'paw',
-    salud: 'brain',
-    deportes: 'dumbbell',
-    salidas: 'film',
-    cochera: 'parking',
-    lucy: 'user',
-    cristina: 'user',
-    resumen: 'chart-bar'
-  };
-  return icons[key] || 'file-invoice-dollar';
-}
-
-function clearForm(key) {
-  $(`#${key}Fecha`).value = '';
-  $(`#${key}Monto`).value = '';
-  $(`#${key}Notas`).value = '';
-  $(`#${key}FileName`).textContent = 'No seleccionado';
-  if ($(`#${key}Comprobante`)) $(`#${key}Comprobante`).value = '';
 }

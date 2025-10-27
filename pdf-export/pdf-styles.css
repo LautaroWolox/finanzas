@@ -1,0 +1,103 @@
+/* pdf-styles.css */
+.pdf-container {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 20px;
+  color: #333;
+}
+
+.pdf-header {
+  text-align: center;
+  margin-bottom: 30px;
+  border-bottom: 2px solid #4F46E5;
+  padding-bottom: 15px;
+}
+
+.pdf-title {
+  font-size: 24px;
+  color: #4F46E5;
+  margin: 0;
+}
+
+.pdf-subtitle {
+  font-size: 16px;
+  color: #666;
+  margin: 5px 0 0 0;
+}
+
+.pdf-section {
+  margin-bottom: 25px;
+  page-break-inside: avoid;
+}
+
+.pdf-section h3 {
+  background-color: #f8fafc;
+  padding: 10px;
+  border-left: 4px solid #4F46E5;
+  margin: 0 0 15px 0;
+  font-size: 18px;
+}
+
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 15px;
+}
+
+.pdf-table th {
+  background-color: #4F46E5;
+  color: white;
+  padding: 10px;
+  text-align: left;
+  font-weight: 600;
+}
+
+.pdf-table td {
+  padding: 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.pdf-table tr:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.pdf-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 2px solid #e5e7eb;
+}
+
+.pdf-summary-item {
+  text-align: center;
+  flex: 1;
+}
+
+.pdf-summary-value {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 5px 0;
+}
+
+.pdf-summary-value.positive {
+  color: #059669;
+}
+
+.pdf-summary-value.negative {
+  color: #dc2626;
+}
+
+/* Estilos para cuando se imprime/exporta a PDF */
+@media print {
+  .pdf-container {
+    padding: 0;
+  }
+  
+  .no-print {
+    display: none !important;
+  }
+  
+  .pdf-section {
+    page-break-inside: avoid;
+  }
+}

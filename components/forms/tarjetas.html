@@ -1,56 +1,40 @@
 <div class="form-container">
   <h2><i class="fas fa-credit-card"></i> Tarjetas de Crédito</h2>
   
-  <div class="form-tabs">
-    <button class="tab-btn active" data-tab="ciudad">Banco Ciudad</button>
-    <button class="tab-btn" data-tab="naranja">Naranja X</button>
-    <button class="tab-btn" data-tab="resumen">Resumen Tarjetas</button>
-  </div>
-  
-  <!-- TAB BANCO CIUDAD -->
-  <div id="ciudadTab" class="tab-content active">
-    <div class="tarjeta-info">
-      <div class="tarjeta-header">
-        <h3><i class="fas fa-credit-card"></i> Banco Ciudad</h3>
-        <div class="tarjeta-stats">
-          <div class="stat">
-            <span class="stat-label">Límite:</span>
-            <span class="stat-value" id="ciudadLimite">$0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Utilizado:</span>
-            <span class="stat-value" id="ciudadUtilizado">$0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Disponible:</span>
-            <span class="stat-value available" id="ciudadDisponible">$0</span>
-          </div>
-        </div>
-      </div>
-      
+  <div class="cards-tabs">
+    <div class="tab-buttons">
+      <button class="tab-button active" data-tab="ciudad">Banco Ciudad</button>
+      <button class="tab-button" data-tab="naranja">Tarjeta Naranja</button>
+      <button class="tab-button" data-tab="otras">Otras Tarjetas</button>
+    </div>
+    
+    <!-- Tab Banco Ciudad -->
+    <div class="tab-content active" id="tab-ciudad">
       <div class="form-grid">
         <div class="form-group">
-          <label for="ciudadFecha"><i class="fas fa-calendar"></i> Fecha</label>
+          <label for="ciudadFecha"><i class="fas fa-calendar"></i> Fecha de Pago</label>
           <input type="date" id="ciudadFecha" class="form-calendar-input">
         </div>
         
         <div class="form-group">
-          <label for="ciudadTipo"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
-          <select id="ciudadTipo">
-            <option value="consumo">Consumo</option>
-            <option value="pago">Pago</option>
-            <option value="ajuste">Ajuste</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="ciudadMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+          <label for="ciudadMonto"><i class="fas fa-dollar-sign"></i> Monto a Pagar</label>
           <input type="number" id="ciudadMonto" placeholder="0.00" step="0.01" min="0">
         </div>
         
         <div class="form-group">
-          <label for="ciudadDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
-          <input type="text" id="ciudadDescripcion" placeholder="Descripción del movimiento">
+          <label for="ciudadCuotas"><i class="fas fa-calendar-alt"></i> Cuotas</label>
+          <select id="ciudadCuotas">
+            <option value="1">1 cuota</option>
+            <option value="3">3 cuotas</option>
+            <option value="6">6 cuotas</option>
+            <option value="12">12 cuotas</option>
+            <option value="otras">Otras cuotas</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="ciudadConcepto"><i class="fas fa-tag"></i> Concepto</label>
+          <input type="text" id="ciudadConcepto" placeholder="¿Qué compraste?">
         </div>
         
         <div class="form-group">
@@ -65,73 +49,63 @@
         </div>
         
         <div class="form-group full-width">
-          <label for="ciudadNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
-          <textarea id="ciudadNotas" placeholder="Detalles adicionales..." rows="2"></textarea>
+          <label for="ciudadDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+          <textarea id="ciudadDescripcion" placeholder="Detalles adicionales del pago..." rows="3"></textarea>
         </div>
       </div>
       
       <div class="form-actions">
         <button type="button" id="saveCiudad" class="btn-primary">
-          <i class="fas fa-save"></i> Guardar Movimiento
+          <i class="fas fa-save"></i> Guardar Pago
         </button>
         <button type="button" id="clearCiudad" class="btn-secondary">
-          <i class="fas fa-broom"></i> Limpiar
+          <i class="fas fa-broom"></i> Limpiar Formulario
         </button>
       </div>
       
       <div class="records-section">
-        <h4><i class="fas fa-list"></i> Movimientos Banco Ciudad</h4>
-        <div id="ciudadRecords" class="records-list">
-          <!-- Los registros se cargarán dinámicamente -->
+        <h3><i class="fas fa-history"></i> Historial Banco Ciudad</h3>
+        <div class="summary-cards mini">
+          <div class="summary-card">
+            <h4>Total Este Mes</h4>
+            <div class="summary-amount" id="ciudadTotal">$0</div>
+          </div>
+          <div class="summary-card">
+            <h4>Cantidad de Pagos</h4>
+            <div class="summary-amount" id="ciudadCount">0</div>
+          </div>
         </div>
+        <div id="ciudadRecords" class="records-list"></div>
       </div>
     </div>
-  </div>
-  
-  <!-- TAB NARANJA X -->
-  <div id="naranjaTab" class="tab-content">
-    <div class="tarjeta-info">
-      <div class="tarjeta-header">
-        <h3><i class="fas fa-credit-card"></i> Naranja X</h3>
-        <div class="tarjeta-stats">
-          <div class="stat">
-            <span class="stat-label">Límite:</span>
-            <span class="stat-value" id="naranjaLimite">$0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Utilizado:</span>
-            <span class="stat-value" id="naranjaUtilizado">$0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Disponible:</span>
-            <span class="stat-value available" id="naranjaDisponible">$0</span>
-          </div>
-        </div>
-      </div>
-      
+    
+    <!-- Tab Tarjeta Naranja -->
+    <div class="tab-content" id="tab-naranja">
       <div class="form-grid">
         <div class="form-group">
-          <label for="naranjaFecha"><i class="fas fa-calendar"></i> Fecha</label>
+          <label for="naranjaFecha"><i class="fas fa-calendar"></i> Fecha de Pago</label>
           <input type="date" id="naranjaFecha" class="form-calendar-input">
         </div>
         
         <div class="form-group">
-          <label for="naranjaTipo"><i class="fas fa-exchange-alt"></i> Tipo de Movimiento</label>
-          <select id="naranjaTipo">
-            <option value="consumo">Consumo</option>
-            <option value="pago">Pago</option>
-            <option value="ajuste">Ajuste</option>
-          </select>
-        </div>
-        
-        <div class="form-group">
-          <label for="naranjaMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
+          <label for="naranjaMonto"><i class="fas fa-dollar-sign"></i> Monto a Pagar</label>
           <input type="number" id="naranjaMonto" placeholder="0.00" step="0.01" min="0">
         </div>
         
         <div class="form-group">
-          <label for="naranjaDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
-          <input type="text" id="naranjaDescripcion" placeholder="Descripción del movimiento">
+          <label for="naranjaCuotas"><i class="fas fa-calendar-alt"></i> Cuotas</label>
+          <select id="naranjaCuotas">
+            <option value="1">1 cuota</option>
+            <option value="3">3 cuotas</option>
+            <option value="6">6 cuotas</option>
+            <option value="12">12 cuotas</option>
+            <option value="otras">Otras cuotas</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="naranjaConcepto"><i class="fas fa-tag"></i> Concepto</label>
+          <input type="text" id="naranjaConcepto" placeholder="¿Qué compraste?">
         </div>
         
         <div class="form-group">
@@ -146,62 +120,109 @@
         </div>
         
         <div class="form-group full-width">
-          <label for="naranjaNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
-          <textarea id="naranjaNotas" placeholder="Detalles adicionales..." rows="2"></textarea>
+          <label for="naranjaDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+          <textarea id="naranjaDescripcion" placeholder="Detalles adicionales del pago..." rows="3"></textarea>
         </div>
       </div>
       
       <div class="form-actions">
         <button type="button" id="saveNaranja" class="btn-primary">
-          <i class="fas fa-save"></i> Guardar Movimiento
+          <i class="fas fa-save"></i> Guardar Pago
         </button>
         <button type="button" id="clearNaranja" class="btn-secondary">
-          <i class="fas fa-broom"></i> Limpiar
+          <i class="fas fa-broom"></i> Limpiar Formulario
         </button>
       </div>
       
       <div class="records-section">
-        <h4><i class="fas fa-list"></i> Movimientos Naranja X</h4>
-        <div id="naranjaRecords" class="records-list">
-          <!-- Los registros se cargarán dinámicamente -->
+        <h3><i class="fas fa-history"></i> Historial Tarjeta Naranja</h3>
+        <div class="summary-cards mini">
+          <div class="summary-card">
+            <h4>Total Este Mes</h4>
+            <div class="summary-amount" id="naranjaTotal">$0</div>
+          </div>
+          <div class="summary-card">
+            <h4>Cantidad de Pagos</h4>
+            <div class="summary-amount" id="naranjaCount">0</div>
+          </div>
         </div>
+        <div id="naranjaRecords" class="records-list"></div>
       </div>
     </div>
-  </div>
-  
-  <!-- TAB RESUMEN -->
-  <div id="resumenTab" class="tab-content">
-    <div class="resumen-tarjetas">
-      <h3><i class="fas fa-chart-pie"></i> Resumen General de Tarjetas</h3>
-      
-      <div class="summary-cards">
-        <div class="summary-card">
-          <h4>Total Utilizado</h4>
-          <div class="summary-amount" id="totalUtilizado">$0</div>
+    
+    <!-- Tab Otras Tarjetas -->
+    <div class="tab-content" id="tab-otras">
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="otrasTarjeta"><i class="fas fa-credit-card"></i> Nombre de la Tarjeta</label>
+          <input type="text" id="otrasTarjeta" placeholder="Ej: Visa, Mastercard, etc.">
         </div>
-        <div class="summary-card">
-          <h4>Total Límite</h4>
-          <div class="summary-amount" id="totalLimite">$0</div>
+        
+        <div class="form-group">
+          <label for="otrasFecha"><i class="fas fa-calendar"></i> Fecha de Pago</label>
+          <input type="date" id="otrasFecha" class="form-calendar-input">
         </div>
-        <div class="summary-card">
-          <h4>Disponible Total</h4>
-          <div class="summary-amount available" id="totalDisponible">$0</div>
+        
+        <div class="form-group">
+          <label for="otrasMonto"><i class="fas fa-dollar-sign"></i> Monto a Pagar</label>
+          <input type="number" id="otrasMonto" placeholder="0.00" step="0.01" min="0">
         </div>
-        <div class="summary-card">
-          <h4>Utilización</h4>
-          <div class="summary-amount" id="porcentajeUtilizacion">0%</div>
+        
+        <div class="form-group">
+          <label for="otrasCuotas"><i class="fas fa-calendar-alt"></i> Cuotas</label>
+          <select id="otrasCuotas">
+            <option value="1">1 cuota</option>
+            <option value="3">3 cuotas</option>
+            <option value="6">6 cuotas</option>
+            <option value="12">12 cuotas</option>
+            <option value="otras">Otras cuotas</option>
+          </select>
+        </div>
+        
+        <div class="form-group">
+          <label for="otrasConcepto"><i class="fas fa-tag"></i> Concepto</label>
+          <input type="text" id="otrasConcepto" placeholder="¿Qué compraste?">
+        </div>
+        
+        <div class="form-group">
+          <label for="otrasComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+          <div class="file-input-container">
+            <input type="file" id="otrasComprobante" accept="image/*,.pdf" style="display:none">
+            <button type="button" id="otrasFileBtn" class="file-btn">
+              <i class="fas fa-camera"></i> Subir Comprobante
+            </button>
+            <span id="otrasFileName" class="file-name">No seleccionado</span>
+          </div>
+        </div>
+        
+        <div class="form-group full-width">
+          <label for="otrasDescripcion"><i class="fas fa-align-left"></i> Descripción</label>
+          <textarea id="otrasDescripcion" placeholder="Detalles adicionales del pago..." rows="3"></textarea>
         </div>
       </div>
       
-      <div class="chart-container">
-        <canvas id="tarjetasChart" width="400" height="200"></canvas>
+      <div class="form-actions">
+        <button type="button" id="saveOtras" class="btn-primary">
+          <i class="fas fa-save"></i> Guardar Pago
+        </button>
+        <button type="button" id="clearOtras" class="btn-secondary">
+          <i class="fas fa-broom"></i> Limpiar Formulario
+        </button>
       </div>
       
-      <div class="movimientos-combinados">
-        <h4><i class="fas fa-stream"></i> Todos los Movimientos</h4>
-        <div id="todosMovimientos" class="records-list">
-          <!-- Movimientos combinados se cargarán aquí -->
+      <div class="records-section">
+        <h3><i class="fas fa-history"></i> Historial Otras Tarjetas</h3>
+        <div class="summary-cards mini">
+          <div class="summary-card">
+            <h4>Total Este Mes</h4>
+            <div class="summary-amount" id="otrasTotal">$0</div>
+          </div>
+          <div class="summary-card">
+            <h4>Cantidad de Pagos</h4>
+            <div class="summary-amount" id="otrasCount">0</div>
+          </div>
         </div>
+        <div id="otrasRecords" class="records-list"></div>
       </div>
     </div>
   </div>
@@ -209,208 +230,304 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Inicializar tabs
-  initTabs();
-  
-  // Inicializar calendarios
-  initFormCalendar('ciudadFecha');
-  initFormCalendar('naranjaFecha');
-  
-  // Configurar fechas actuales por defecto
-  const today = new Date().toISOString().split('T')[0];
-  document.getElementById('ciudadFecha').value = today;
-  document.getElementById('naranjaFecha').value = today;
-  
-  // Configurar eventos para Banco Ciudad
-  setupTarjetaEvents('ciudad');
-  
-  // Configurar eventos para Naranja X
-  setupTarjetaEvents('naranja');
-  
-  // Cargar datos iniciales
-  loadTarjetasData();
+  initializeTarjetasForm();
 });
 
-function initTabs() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', function() {
-      // Remover active de todos
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+function initializeTarjetasForm() {
+  // Inicializar tabs
+  initializeTabs();
+  
+  // Inicializar formularios de cada tarjeta
+  initializeCiudadForm();
+  initializeNaranjaForm();
+  initializeOtrasForm();
+  
+  // Cargar registros existentes
+  loadTarjetasRecords();
+}
+
+function initializeTabs() {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+  
+  tabButtons.forEach(button => {
+    button.addEventListener('click', function() {
+      const tabId = this.getAttribute('data-tab');
       
-      // Agregar active al clickeado
+      // Remover clase active de todos los botones y contenidos
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+      
+      // Agregar clase active al botón clickeado
       this.classList.add('active');
-      document.getElementById(this.dataset.tab + 'Tab').classList.add('active');
       
-      // Si es el tab de resumen, actualizar datos
-      if (this.dataset.tab === 'resumen') {
-        updateResumenTarjetas();
+      // Mostrar el contenido correspondiente
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+    });
+  });
+}
+
+function initializeCiudadForm() {
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('ciudadFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('ciudadFileBtn');
+  const fileInput = document.getElementById('ciudadComprobante');
+  const fileName = document.getElementById('ciudadFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      fileInput.click();
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
       }
     });
-  });
-}
-
-function setupTarjetaEvents(tarjeta) {
-  // Manejar subida de archivos
-  document.getElementById(tarjeta + 'FileBtn').addEventListener('click', function() {
-    handleFileInput(document.getElementById(tarjeta + 'Comprobante'), function(file) {
-      document.getElementById(tarjeta + 'FileName').textContent = file.name;
+  }
+  
+  // Guardar pago
+  const saveBtn = document.getElementById('saveCiudad');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      saveTarjetaRecord('ciudad');
     });
-  });
-  
-  document.getElementById(tarjeta + 'Comprobante').addEventListener('change', function(e) {
-    if (e.target.files.length > 0) {
-      document.getElementById(tarjeta + 'FileName').textContent = e.target.files[0].name;
-    }
-  });
-  
-  // Guardar movimiento
-  document.getElementById('save' + tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)).addEventListener('click', function() {
-    saveTarjetaRecord(tarjeta);
-  });
+  }
   
   // Limpiar formulario
-  document.getElementById('clear' + tarjeta.charAt(0).toUpperCase() + tarjeta.slice(1)).addEventListener('click', function() {
-    clearTarjetaForm(tarjeta);
-  });
+  const clearBtn = document.getElementById('clearCiudad');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      clearTarjetaForm('ciudad');
+    });
+  }
 }
 
-function saveTarjetaRecord(tarjeta) {
+function initializeNaranjaForm() {
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('naranjaFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('naranjaFileBtn');
+  const fileInput = document.getElementById('naranjaComprobante');
+  const fileName = document.getElementById('naranjaFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      fileInput.click();
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar pago
+  const saveBtn = document.getElementById('saveNaranja');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      saveTarjetaRecord('naranja');
+    });
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearNaranja');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      clearTarjetaForm('naranja');
+    });
+  }
+}
+
+function initializeOtrasForm() {
+  // Configurar fecha actual por defecto
+  const today = new Date().toISOString().split('T')[0];
+  const fechaInput = document.getElementById('otrasFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Manejar subida de archivos
+  const fileBtn = document.getElementById('otrasFileBtn');
+  const fileInput = document.getElementById('otrasComprobante');
+  const fileName = document.getElementById('otrasFileName');
+  
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      fileInput.click();
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
+  
+  // Guardar pago
+  const saveBtn = document.getElementById('saveOtras');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', function() {
+      saveTarjetaRecord('otras');
+    });
+  }
+  
+  // Limpiar formulario
+  const clearBtn = document.getElementById('clearOtras');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', function() {
+      clearTarjetaForm('otras');
+    });
+  }
+}
+
+function saveTarjetaRecord(tipo) {
   const k = ensureMonth();
-  const fecha = document.getElementById(tarjeta + 'Fecha').value;
-  const tipo = document.getElementById(tarjeta + 'Tipo').value;
-  const monto = parseFloat(document.getElementById(tarjeta + 'Monto').value);
-  const descripcion = document.getElementById(tarjeta + 'Descripcion').value;
-  const notas = document.getElementById(tarjeta + 'Notas').value;
-  const fileInput = document.getElementById(tarjeta + 'Comprobante');
+  const fecha = document.getElementById(`${tipo}Fecha`).value;
+  const montoInput = document.getElementById(`${tipo}Monto`);
+  const monto = parseFloat(montoInput.value);
+  const cuotas = document.getElementById(`${tipo}Cuotas`).value;
+  const concepto = document.getElementById(`${tipo}Concepto`).value;
+  const descripcion = document.getElementById(`${tipo}Descripcion`).value;
+  const fileInput = document.getElementById(`${tipo}Comprobante`);
+  
+  // Para "otras" tarjetas, también necesitamos el nombre
+  let nombreTarjeta = '';
+  if (tipo === 'otras') {
+    nombreTarjeta = document.getElementById('otrasTarjeta').value;
+    if (!nombreTarjeta.trim()) {
+      alert('Por favor ingrese el nombre de la tarjeta');
+      return;
+    }
+  }
   
   if (!fecha) {
     alert('Por favor seleccione una fecha');
     return;
   }
   
-  if (!monto || monto <= 0) {
+  if (!monto || monto <= 0 || isNaN(monto)) {
     alert('Por favor ingrese un monto válido');
+    montoInput.focus();
     return;
   }
   
-  if (!descripcion.trim()) {
-    alert('Por favor ingrese una descripción');
+  if (!concepto.trim()) {
+    alert('Por favor ingrese el concepto del pago');
     return;
   }
   
-  // Inicializar estructura si no existe
-  if (!state[k].tarjetas) state[k].tarjetas = {};
-  if (!state[k].tarjetas[tarjeta]) {
-    state[k].tarjetas[tarjeta] = {
-      limite: 0,
-      utilizado: 0,
-      movimientos: []
-    };
-  }
+  if (!state[k].tarjetas) state[k].tarjetas = [];
   
   const record = {
-    id: crypto.randomUUID(),
-    fecha: fecha,
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
     tipo: tipo,
+    fecha: fecha,
     monto: monto,
+    cuotas: cuotas,
+    concepto: concepto,
     descripcion: descripcion,
-    notas: notas,
     timestamp: new Date().toISOString()
   };
   
-  // Actualizar saldo según el tipo de movimiento
-  if (tipo === 'consumo') {
-    state[k].tarjetas[tarjeta].utilizado += monto;
-  } else if (tipo === 'pago') {
-    state[k].tarjetas[tarjeta].utilizado = Math.max(0, state[k].tarjetas[tarjeta].utilizado - monto);
+  // Agregar nombre de tarjeta para "otras"
+  if (tipo === 'otras') {
+    record.nombreTarjeta = nombreTarjeta;
   }
-  // Los ajustes no modifican el utilizado
   
   // Manejar archivo si existe
-  if (fileInput.files.length > 0) {
+  if (fileInput && fileInput.files.length > 0) {
     const file = fileInput.files[0];
-    storeFile(file).then(fileId => {
-      record.comprobanteId = fileId;
-      record.comprobanteNombre = file.name;
-      completeSaveTarjeta(record, tarjeta, k);
-    }).catch(error => {
-      console.error('Error guardando archivo:', error);
-      completeSaveTarjeta(record, tarjeta, k);
-    });
-  } else {
-    completeSaveTarjeta(record, tarjeta, k);
+    record.comprobanteNombre = file.name;
   }
+  
+  completeSaveTarjeta(record, k, tipo);
 }
 
-function completeSaveTarjeta(record, tarjeta, k) {
-  state[k].tarjetas[tarjeta].movimientos.push(record);
+function completeSaveTarjeta(record, k, tipo) {
+  state[k].tarjetas.push(record);
   save();
   
-  alert('Movimiento guardado correctamente');
-  loadTarjetasData();
-  renderKPIs();
-  clearTarjetaForm(tarjeta);
+  alert(`Pago de tarjeta ${getTipoTarjetaText(tipo)} guardado correctamente`);
+  loadTarjetasRecords();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
+  clearTarjetaForm(tipo);
 }
 
-function loadTarjetasData() {
-  loadTarjetaData('ciudad');
-  loadTarjetaData('naranja');
-}
-
-function loadTarjetaData(tarjeta) {
+function loadTarjetasRecords() {
   const k = ensureMonth();
-  const tarjetaData = state[k].tarjetas?.[tarjeta] || { limite: 0, utilizado: 0, movimientos: [] };
-  const recordsContainer = document.getElementById(tarjeta + 'Records');
   
-  // Actualizar estadísticas
-  document.getElementById(tarjeta + 'Limite').textContent = fmt(tarjetaData.limite || 0);
-  document.getElementById(tarjeta + 'Utilizado').textContent = fmt(tarjetaData.utilizado || 0);
+  // Cargar registros para cada tipo de tarjeta
+  loadTarjetaRecordsByType('ciudad', k);
+  loadTarjetaRecordsByType('naranja', k);
+  loadTarjetaRecordsByType('otras', k);
+}
+
+function loadTarjetaRecordsByType(tipo, k) {
+  const recordsContainer = document.getElementById(`${tipo}Records`);
+  const totalElement = document.getElementById(`${tipo}Total`);
+  const countElement = document.getElementById(`${tipo}Count`);
   
-  const disponible = (tarjetaData.limite || 0) - (tarjetaData.utilizado || 0);
-  document.getElementById(tarjeta + 'Disponible').textContent = fmt(disponible);
+  if (!recordsContainer) return;
   
-  // Cargar movimientos
-  const movimientos = tarjetaData.movimientos || [];
+  const allRecords = state[k].tarjetas || [];
+  const records = allRecords.filter(record => record.tipo === tipo);
   
-  if (movimientos.length === 0) {
+  // Calcular totales
+  const total = records.reduce((sum, record) => sum + record.monto, 0);
+  
+  if (totalElement) totalElement.textContent = fmt(total);
+  if (countElement) countElement.textContent = records.length;
+  
+  if (records.length === 0) {
     recordsContainer.innerHTML = `
       <div class="no-records">
         <i class="fas fa-inbox"></i>
-        <p>No hay movimientos para esta tarjeta</p>
+        <p>No hay pagos registrados para ${getTipoTarjetaText(tipo)} este mes</p>
       </div>
     `;
     return;
   }
   
   // Ordenar por fecha (más reciente primero)
-  const sortedMovimientos = [...movimientos].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  const sortedRecords = [...records].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
   
-  recordsContainer.innerHTML = sortedMovimientos.map(mov => `
+  recordsContainer.innerHTML = sortedRecords.map(record => `
     <div class="record-item">
       <div class="record-info">
         <div class="record-main">
-          <span class="record-date">${formatDate(mov.fecha)}</span>
-          <span class="record-amount ${mov.tipo}">${fmt(mov.monto)}</span>
+          <span class="record-date">${formatDate(record.fecha)}</span>
+          <span class="record-amount">${fmt(record.monto)}</span>
         </div>
         <div class="record-details">
-          <span class="record-categoria ${mov.tipo}">${getTipoText(mov.tipo)}</span>
-          <span class="record-desc">${mov.descripcion}</span>
-          ${mov.notas ? `<span class="record-notes">${mov.notas}</span>` : ''}
-          ${mov.comprobanteNombre ? `
+          <span class="record-categoria ${record.tipo}">${getTipoTarjetaText(record.tipo)}</span>
+          ${record.nombreTarjeta ? `<span class="record-tarjeta-nombre">${record.nombreTarjeta}</span>` : ''}
+          <span class="record-concepto">${record.concepto}</span>
+          <span class="record-cuotas">${record.cuotas} cuota${record.cuotas !== '1' ? 's' : ''}</span>
+          ${record.descripcion ? `<span class="record-desc">${record.descripcion}</span>` : ''}
+          ${record.comprobanteNombre ? `
             <span class="record-file">
-              <i class="fas fa-paperclip"></i> ${mov.comprobanteNombre}
+              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
             </span>
           ` : ''}
         </div>
       </div>
       <div class="record-actions">
-        ${mov.comprobanteId ? `
-          <button class="btn-icon" onclick="downloadTarjetaFile('${mov.comprobanteId}')" title="Descargar comprobante">
-            <i class="fas fa-download"></i>
-          </button>
-        ` : ''}
-        <button class="btn-icon danger" onclick="deleteTarjetaMovimiento('${tarjeta}', '${mov.id}')" title="Eliminar movimiento">
+        <button class="btn-icon danger" onclick="deleteTarjetaRecord('${record.id}', '${tipo}')" title="Eliminar registro">
           <i class="fas fa-trash"></i>
         </button>
       </div>
@@ -418,328 +535,160 @@ function loadTarjetaData(tarjeta) {
   `).join('');
 }
 
-function deleteTarjetaMovimiento(tarjeta, id) {
-  if (!confirm('¿Está seguro de que desea eliminar este movimiento?')) {
+function deleteTarjetaRecord(id, tipo) {
+  if (!confirm('¿Está seguro de que desea eliminar este pago de tarjeta?')) {
     return;
   }
   
   const k = ensureMonth();
-  const movimientos = state[k].tarjetas?.[tarjeta]?.movimientos || [];
-  const index = movimientos.findIndex(mov => mov.id === id);
+  const index = state[k].tarjetas.findIndex(record => record.id === id);
   
   if (index !== -1) {
-    const movimiento = movimientos[index];
-    
-    // Revertir el efecto en el saldo utilizado
-    if (movimiento.tipo === 'consumo') {
-      state[k].tarjetas[tarjeta].utilizado -= movimiento.monto;
-    } else if (movimiento.tipo === 'pago') {
-      state[k].tarjetas[tarjeta].utilizado += movimiento.monto;
-    }
-    
-    state[k].tarjetas[tarjeta].movimientos.splice(index, 1);
+    state[k].tarjetas.splice(index, 1);
     save();
-    loadTarjetasData();
-    renderKPIs();
-    alert('Movimiento eliminado correctamente');
+    loadTarjetasRecords();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
+    alert('Pago de tarjeta eliminado correctamente');
   }
 }
 
-function downloadTarjetaFile(fileId) {
-  downloadFile(fileId);
-}
-
-function clearTarjetaForm(tarjeta) {
-  document.getElementById(tarjeta + 'Fecha').value = '';
-  document.getElementById(tarjeta + 'Tipo').value = 'consumo';
-  document.getElementById(tarjeta + 'Monto').value = '';
-  document.getElementById(tarjeta + 'Descripcion').value = '';
-  document.getElementById(tarjeta + 'Notas').value = '';
-  document.getElementById(tarjeta + 'FileName').textContent = 'No seleccionado';
-  document.getElementById(tarjeta + 'Comprobante').value = '';
+function clearTarjetaForm(tipo) {
+  const fechaInput = document.getElementById(`${tipo}Fecha`);
+  const montoInput = document.getElementById(`${tipo}Monto`);
+  const cuotasSelect = document.getElementById(`${tipo}Cuotas`);
+  const conceptoInput = document.getElementById(`${tipo}Concepto`);
+  const descripcionInput = document.getElementById(`${tipo}Descripcion`);
+  const fileName = document.getElementById(`${tipo}FileName`);
+  const fileInput = document.getElementById(`${tipo}Comprobante`);
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '';
+  if (cuotasSelect) cuotasSelect.value = '1';
+  if (conceptoInput) conceptoInput.value = '';
+  if (descripcionInput) descripcionInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
+  
+  // Para "otras" tarjetas, limpiar también el nombre
+  if (tipo === 'otras') {
+    const tarjetaInput = document.getElementById('otrasTarjeta');
+    if (tarjetaInput) tarjetaInput.value = '';
+  }
   
   // Establecer fecha actual por defecto
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById(tarjeta + 'Fecha').value = today;
+  if (fechaInput) fechaInput.value = today;
 }
 
-function updateResumenTarjetas() {
-  const k = ensureMonth();
-  const ciudad = state[k].tarjetas?.ciudad || { limite: 0, utilizado: 0 };
-  const naranja = state[k].tarjetas?.naranja || { limite: 0, utilizado: 0 };
-  
-  const totalLimite = (ciudad.limite || 0) + (naranja.limite || 0);
-  const totalUtilizado = (ciudad.utilizado || 0) + (naranja.utilizado || 0);
-  const totalDisponible = totalLimite - totalUtilizado;
-  const porcentajeUtilizacion = totalLimite > 0 ? (totalUtilizado / totalLimite * 100).toFixed(1) : 0;
-  
-  document.getElementById('totalLimite').textContent = fmt(totalLimite);
-  document.getElementById('totalUtilizado').textContent = fmt(totalUtilizado);
-  document.getElementById('totalDisponible').textContent = fmt(totalDisponible);
-  document.getElementById('porcentajeUtilizacion').textContent = porcentajeUtilizacion + '%';
-  
-  // Cargar movimientos combinados
-  loadMovimientosCombinados();
-  
-  // Actualizar gráfico
-  updateTarjetasChart(ciudad, naranja);
-}
-
-function loadMovimientosCombinados() {
-  const k = ensureMonth();
-  const ciudadMovs = state[k].tarjetas?.ciudad?.movimientos || [];
-  const naranjaMovs = state[k].tarjetas?.naranja?.movimientos || [];
-  
-  const todosMovimientos = [
-    ...ciudadMovs.map(mov => ({ ...mov, tarjeta: 'Banco Ciudad' })),
-    ...naranjaMovs.map(mov => ({ ...mov, tarjeta: 'Naranja X' }))
-  ].sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
-  
-  const container = document.getElementById('todosMovimientos');
-  
-  if (todosMovimientos.length === 0) {
-    container.innerHTML = `
-      <div class="no-records">
-        <i class="fas fa-inbox"></i>
-        <p>No hay movimientos en ninguna tarjeta</p>
-      </div>
-    `;
-    return;
-  }
-  
-  container.innerHTML = todosMovimientos.map(mov => `
-    <div class="record-item">
-      <div class="record-info">
-        <div class="record-main">
-          <span class="record-date">${formatDate(mov.fecha)}</span>
-          <span class="record-amount ${mov.tipo}">${fmt(mov.monto)}</span>
-        </div>
-        <div class="record-details">
-          <span class="record-categoria ${mov.tipo}">${getTipoText(mov.tipo)}</span>
-          <span class="record-tarjeta">${mov.tarjeta}</span>
-          <span class="record-desc">${mov.descripcion}</span>
-        </div>
-      </div>
-    </div>
-  `).join('');
-}
-
-function updateTarjetasChart(ciudad, naranja) {
-  const canvas = document.getElementById('tarjetasChart');
-  if (!canvas) return;
-  
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  
-  const ciudadUtilizado = ciudad.utilizado || 0;
-  const naranjaUtilizado = naranja.utilizado || 0;
-  const ciudadDisponible = (ciudad.limite || 0) - ciudadUtilizado;
-  const naranjaDisponible = (naranja.limite || 0) - naranjaUtilizado;
-  
-  if (ciudadUtilizado === 0 && naranjaUtilizado === 0) {
-    ctx.font = '16px Arial';
-    ctx.fillStyle = '#666';
-    ctx.textAlign = 'center';
-    ctx.fillText('No hay datos para mostrar', canvas.width / 2, canvas.height / 2);
-    return;
-  }
-  
-  // Dibujar gráfico de barras simple
-  const barWidth = 80;
-  const spacing = 40;
-  const startX = 50;
-  const maxHeight = 150;
-  
-  const maxValue = Math.max(ciudadUtilizado + ciudadDisponible, naranjaUtilizado + naranjaDisponible);
-  const scale = maxHeight / maxValue;
-  
-  // Banco Ciudad
-  const ciudadUtilizadoHeight = ciudadUtilizado * scale;
-  const ciudadDisponibleHeight = ciudadDisponible * scale;
-  
-  // Barra utilizada
-  ctx.fillStyle = '#ef4444';
-  ctx.fillRect(startX, maxHeight - ciudadUtilizadoHeight, barWidth, ciudadUtilizadoHeight);
-  
-  // Barra disponible
-  ctx.fillStyle = '#22c55e';
-  ctx.fillRect(startX, maxHeight - ciudadUtilizadoHeight - ciudadDisponibleHeight, barWidth, ciudadDisponibleHeight);
-  
-  // Etiqueta
-  ctx.fillStyle = '#333';
-  ctx.font = '12px Arial';
-  ctx.fillText('Ciudad', startX + barWidth/2 - 15, maxHeight + 20);
-  
-  // Naranja X
-  const naranjaUtilizadoHeight = naranjaUtilizado * scale;
-  const naranjaDisponibleHeight = naranjaDisponible * scale;
-  
-  // Barra utilizada
-  ctx.fillStyle = '#ef4444';
-  ctx.fillRect(startX + barWidth + spacing, maxHeight - naranjaUtilizadoHeight, barWidth, naranjaUtilizadoHeight);
-  
-  // Barra disponible
-  ctx.fillStyle = '#22c55e';
-  ctx.fillRect(startX + barWidth + spacing, maxHeight - naranjaUtilizadoHeight - naranjaDisponibleHeight, barWidth, naranjaDisponibleHeight);
-  
-  // Etiqueta
-  ctx.fillText('Naranja', startX + barWidth + spacing + barWidth/2 - 20, maxHeight + 20);
-  
-  // Leyenda
-  ctx.fillStyle = '#ef4444';
-  ctx.fillRect(50, 10, 15, 15);
-  ctx.fillStyle = '#333';
-  ctx.fillText('Utilizado', 70, 20);
-  
-  ctx.fillStyle = '#22c55e';
-  ctx.fillRect(150, 10, 15, 15);
-  ctx.fillStyle = '#333';
-  ctx.fillText('Disponible', 170, 20);
-}
-
-function getTipoText(tipo) {
+function getTipoTarjetaText(tipo) {
   const tipos = {
-    'consumo': 'Consumo',
-    'pago': 'Pago',
-    'ajuste': 'Ajuste'
+    'ciudad': 'Banco Ciudad',
+    'naranja': 'Tarjeta Naranja',
+    'otras': 'Otras Tarjetas'
   };
   return tipos[tipo] || tipo;
-}
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
 }
 </script>
 
 <style>
-.tarjeta-info {
+.cards-tabs {
+  margin-top: 20px;
+}
+
+.tab-buttons {
+  display: flex;
   background: #f8fafc;
-  padding: 20px;
-  border-radius: 12px;
-  margin-bottom: 20px;
-}
-
-.tarjeta-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
-  gap: 15px;
-}
-
-.tarjeta-stats {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.stat {
-  text-align: center;
-  padding: 10px 15px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-}
-
-.stat-label {
-  display: block;
-  font-size: 0.8rem;
-  color: #6b7280;
-  margin-bottom: 5px;
-}
-
-.stat-value {
-  display: block;
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #111827;
-}
-
-.stat-value.available {
-  color: #22c55e;
-}
-
-.record-amount.consumo {
-  color: #ef4444;
-}
-
-.record-amount.pago {
-  color: #22c55e;
-}
-
-.record-categoria.consumo {
-  background: #fef2f2;
-  color: #dc2626;
-  border: 1px solid #fecaca;
-}
-
-.record-categoria.pago {
-  background: #f0fdf4;
-  color: #16a34a;
-  border: 1px solid #bbf7d0;
-}
-
-.record-categoria.ajuste {
-  background: #fafafa;
-  color: #6b7280;
+  border-radius: 8px 8px 0 0;
+  overflow: hidden;
   border: 1px solid #e5e7eb;
+  border-bottom: none;
 }
 
-.record-tarjeta {
-  background: #e0f2fe;
-  color: #0369a1;
-  padding: 2px 8px;
+.tab-button {
+  flex: 1;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-weight: 600;
+  color: #6b7280;
+  transition: all 0.3s ease;
+  border-bottom: 3px solid transparent;
+}
+
+.tab-button:hover {
+  background: #f1f5f9;
+  color: #374151;
+}
+
+.tab-button.active {
+  background: white;
+  color: #3b82f6;
+  border-bottom-color: #3b82f6;
+}
+
+.tab-content {
+  display: none;
+  padding: 24px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+
+.tab-content.active {
+  display: block;
+}
+
+.record-categoria.ciudad {
+  background: #3b82f6;
+  color: white;
+}
+
+.record-categoria.naranja {
+  background: #f59e0b;
+  color: white;
+}
+
+.record-categoria.otras {
+  background: #8b5cf6;
+  color: white;
+}
+
+.record-tarjeta-nombre {
+  background: #e5e7eb;
+  color: #374151;
+  padding: 4px 8px;
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
-.chart-container {
-  margin: 20px 0;
-  padding: 20px;
-  background: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.record-concepto {
+  font-weight: 600;
+  color: #1f2937;
 }
 
-.movimientos-combinados {
-  margin-top: 30px;
-}
-
-.summary-cards.mini {
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 15px;
-  margin-bottom: 20px;
-}
-
-.summary-cards.mini .summary-card {
-  padding: 15px;
-}
-
-.summary-cards.mini .summary-amount {
-  font-size: 1.4rem;
+.record-cuotas {
+  color: #6b7280;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 768px) {
-  .tarjeta-header {
+  .tab-buttons {
     flex-direction: column;
-    align-items: flex-start;
   }
   
-  .tarjeta-stats {
-    width: 100%;
-    justify-content: space-between;
+  .tab-button {
+    border-bottom: 1px solid #e5e7eb;
+    border-right: none;
+    text-align: left;
   }
   
-  .stat {
-    flex: 1;
-    min-width: 100px;
+  .tab-button.active {
+    border-bottom: 3px solid #3b82f6;
   }
 }
 </style>

@@ -94,11 +94,6 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initializeSalidasForm() {
-  // Inicializar calendario
-  if (typeof initFormCalendar === 'function') {
-    initFormCalendar('salidasFecha');
-  }
-  
   // Configurar fecha actual por defecto
   const today = new Date().toISOString().split('T')[0];
   const fechaInput = document.getElementById('salidasFecha');
@@ -111,13 +106,7 @@ function initializeSalidasForm() {
   
   if (fileBtn && fileInput) {
     fileBtn.addEventListener('click', function() {
-      if (typeof handleFileInput === 'function') {
-        handleFileInput(fileInput, function(file) {
-          if (fileName) fileName.textContent = file.name;
-        });
-      } else {
-        fileInput.click();
-      }
+      fileInput.click();
     });
   }
   
@@ -191,22 +180,10 @@ function saveSalidasRecord() {
   // Manejar archivo si existe
   if (fileInput && fileInput.files.length > 0) {
     const file = fileInput.files[0];
-    if (typeof storeFile === 'function') {
-      storeFile(file).then(fileId => {
-        record.comprobanteId = fileId;
-        record.comprobanteNombre = file.name;
-        completeSaveSalidas(record, k);
-      }).catch(error => {
-        console.error('Error guardando archivo:', error);
-        completeSaveSalidas(record, k);
-      });
-    } else {
-      record.comprobanteNombre = file.name;
-      completeSaveSalidas(record, k);
-    }
-  } else {
-    completeSaveSalidas(record, k);
+    record.comprobanteNombre = file.name;
   }
+  
+  completeSaveSalidas(record, k);
 }
 
 function completeSaveSalidas(record, k) {
@@ -284,11 +261,6 @@ function loadSalidasRecords() {
         </div>
       </div>
       <div class="record-actions">
-        ${record.comprobanteId ? `
-          <button class="btn-icon" onclick="downloadSalidasFile('${record.comprobanteId}')" title="Descargar comprobante">
-            <i class="fas fa-download"></i>
-          </button>
-        ` : ''}
         <button class="btn-icon danger" onclick="deleteSalidasRecord('${record.id}')" title="Eliminar registro">
           <i class="fas fa-trash"></i>
         </button>
@@ -313,14 +285,6 @@ function deleteSalidasRecord(id) {
       renderKPIs();
     }
     alert('Salida eliminada correctamente');
-  }
-}
-
-function downloadSalidasFile(fileId) {
-  if (typeof downloadFile === 'function') {
-    downloadFile(fileId);
-  } else {
-    alert('Función de descarga no disponible');
   }
 }
 
@@ -360,102 +324,90 @@ function getTipoText(tipo) {
   return tipos[tipo] || tipo;
 }
 
-function getMetodoPagoText(metodoPago) {
+function getMetodoPagoText(metodo) {
   const metodos = {
     'efectivo': 'Efectivo',
     'debito': 'Débito',
     'credito': 'Crédito',
     'transferencia': 'Transferencia'
   };
-  return metodos[metodoPago] || metodoPago;
-}
-
-function formatDate(dateString) {
-  try {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-AR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    });
-  } catch (e) {
-    return dateString;
-  }
-}
-
-function generateUUID() {
-  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-    const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-    return v.toString(16);
-  });
-}
-
-// Asegurar que las funciones globales existan
-if (typeof ensureMonth === 'undefined') {
-  function ensureMonth() {
-    const k = monthKey();
-    if (!state[k]) state[k] = {};
-    return k;
-  }
-}
-
-if (typeof monthKey === 'undefined') {
-  function monthKey() {
-    return `${currentSelectedYear}-${(currentSelectedMonth + 1).toString().padStart(2, '0')}`;
-  }
-}
-
-if (typeof fmt === 'undefined') {
-  function fmt(n) {
-    return new Intl.NumberFormat('es-AR', {
-      style: 'currency',
-      currency: 'ARS',
-      maximumFractionDigits: 2
-    }).format(Number(n || 0));
-  }
-}
-
-if (typeof save === 'undefined') {
-  function save() {
-    localStorage.setItem('finanzas_state', JSON.stringify(state));
-  }
+  return metodos[metodo] || metodo;
 }
 </script>
 
 <style>
-.record-lugar {
-  font-weight: 600;
-  color: #111827;
+.record-categoria.boliche {
+  background: #8b5cf6;
+  color: white;
 }
 
-.record-personas {
-  background: #f0fdf4;
-  color: #16a34a;
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 0.8rem;
-  font-weight: 600;
+.record-categoria.bar {
+  background: #f59e0b;
+  color: white;
+}
+
+.record-categoria.restaurante {
+  background: #ef4444;
+  color: white;
+}
+
+.record-categoria.otros {
+  background: #6b7280;
+  color: white;
 }
 
 .record-metodo-pago {
-  padding: 2px 8px;
+  background: #e5e7eb;
+  color: #374151;
+  padding: 4px 8px;
   border-radius: 12px;
   font-size: 0.8rem;
   font-weight: 600;
 }
 
-.record-metodo-pago.efectivo { background: #1dd1a1; color: white; }
-.record-metodo-pago.debito { background: #54a0ff; color: white; }
-.record-metodo-pago.credito { background: #ff9f40; color: white; }
-.record-metodo-pago.transferencia { background: #5f27cd; color: white; }
+.record-metodo-pago.efectivo {
+  background: #10b981;
+  color: white;
+}
 
-.record-categoria.boliche { background: #ff6b6b; color: white; }
-.record-categoria.bar { background: #feca57; color: #000; }
-.record-categoria.restaurante { background: #ff9f40; color: white; }
-.record-categoria.otros { background: #c8d6e5; color: #222f3e; }
+.record-metodo-pago.debito {
+  background: #3b82f6;
+  color: white;
+}
+
+.record-metodo-pago.credito {
+  background: #f59e0b;
+  color: white;
+}
+
+.record-metodo-pago.transferencia {
+  background: #8b5cf6;
+  color: white;
+}
+
+.record-lugar {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.record-personas {
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.summary-cards.mini {
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
 
 .summary-cards.mini .summary-card {
   padding: 15px;
+}
+
+.summary-cards.mini .summary-card h4 {
+  font-size: 0.9rem;
+  margin-bottom: 8px;
 }
 
 .summary-cards.mini .summary-amount {

@@ -9,7 +9,7 @@
     
     <div class="form-group">
       <label for="sueldoMonto"><i class="fas fa-dollar-sign"></i> Monto</label>
-      <input type="number" id="sueldoMonto" placeholder="0.00" step="0.01" min="0">
+      <input type="number" id="sueldoMonto" placeholder="4000000.00" step="0.01" min="0" value="4000000.00">
     </div>
     
     <div class="form-group">
@@ -23,18 +23,18 @@
     </div>
     
     <div class="form-group">
-      <label for="sueldoComprobante"><i class="fas fa-file-invoice"></i> Comprobante</label>
+      <label for="sueldoComprobante"><i class="fas fa-file-invoice"></i> Recibo de Sueldo</label>
       <div class="file-input-container">
         <input type="file" id="sueldoComprobante" accept="image/*,.pdf" style="display:none">
         <button type="button" id="sueldoFileBtn" class="file-btn">
-          <i class="fas fa-camera"></i> Subir Comprobante
+          <i class="fas fa-camera"></i> Subir Recibo
         </button>
         <span id="sueldoFileName" class="file-name">No seleccionado</span>
       </div>
     </div>
     
     <div class="form-group full-width">
-      <label for="sueldoNotas"><i class="fas fa-sticky-note"></i> Notas Adicionales</label>
+      <label for="sueldoNotas"><i class="fas fa-sticky-note"></i> Observaciones</label>
       <textarea id="sueldoNotas" placeholder="Observaciones sobre este ingreso..." rows="3"></textarea>
     </div>
   </div>
@@ -50,70 +50,100 @@
   
   <div class="records-section">
     <h3><i class="fas fa-history"></i> Historial de Sueldos</h3>
-    <div id="sueldoRecords" class="records-list">
-      <!-- Los registros se cargarán dinámicamente -->
-    </div>
+    <div id="sueldoRecords" class="records-list"></div>
   </div>
 </div>
 
 <script>
+// Inicialización cuando el DOM está listo
 document.addEventListener('DOMContentLoaded', function() {
-  // Inicializar calendario
-  initFormCalendar('sueldoFecha');
-  
+  initializeSueldoForm();
+});
+
+function initializeSueldoForm() {
   // Configurar fecha actual por defecto
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('sueldoFecha').value = today;
+  const fechaInput = document.getElementById('sueldoFecha');
+  if (fechaInput) fechaInput.value = today;
+  
+  // Configurar monto por defecto
+  const montoInput = document.getElementById('sueldoMonto');
+  if (montoInput) montoInput.value = '4000000.00';
   
   // Manejar subida de archivos
-  document.getElementById('sueldoFileBtn').addEventListener('click', function() {
-    handleFileInput(document.getElementById('sueldoComprobante'), function(file) {
-      document.getElementById('sueldoFileName').textContent = file.name;
-    });
-  });
+  const fileBtn = document.getElementById('sueldoFileBtn');
+  const fileInput = document.getElementById('sueldoComprobante');
+  const fileName = document.getElementById('sueldoFileName');
   
-  document.getElementById('sueldoComprobante').addEventListener('change', function(e) {
-    if (e.target.files.length > 0) {
-      document.getElementById('sueldoFileName').textContent = e.target.files[0].name;
-    }
-  });
+  if (fileBtn && fileInput) {
+    fileBtn.addEventListener('click', function() {
+      fileInput.click();
+    });
+  }
+  
+  if (fileInput) {
+    fileInput.addEventListener('change', function(e) {
+      if (e.target.files.length > 0 && fileName) {
+        fileName.textContent = e.target.files[0].name;
+      }
+    });
+  }
   
   // Guardar sueldo
-  document.getElementById('saveSueldo').addEventListener('click', function() {
-    saveSueldoRecord();
-  });
+  const saveBtn = document.getElementById('saveSueldo');
+  if (saveBtn) {
+    saveBtn.addEventListener('click', saveSueldoRecord);
+  }
   
   // Limpiar formulario
-  document.getElementById('clearSueldo').addEventListener('click', function() {
-    clearSueldoForm();
-  });
+  const clearBtn = document.getElementById('clearSueldo');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', clearSueldoForm);
+  }
   
   // Cargar registros existentes
   loadSueldoRecords();
-});
+}
 
 function saveSueldoRecord() {
   const k = ensureMonth();
   const fecha = document.getElementById('sueldoFecha').value;
-  const monto = parseFloat(document.getElementById('sueldoMonto').value);
+  const montoInput = document.getElementById('sueldoMonto');
+  let monto = parseFloat(montoInput.value);
   const fuente = document.getElementById('sueldoFuente').value;
   const notas = document.getElementById('sueldoNotas').value;
   const fileInput = document.getElementById('sueldoComprobante');
   
+  // Validaciones
   if (!fecha) {
     alert('Por favor seleccione una fecha');
     return;
   }
   
-  if (!monto || monto <= 0) {
+  if (!monto || monto <= 0 || isNaN(monto)) {
     alert('Por favor ingrese un monto válido');
+    montoInput.focus();
     return;
   }
   
+  // Verificar si el monto es muy grande (problema de precisión)
+  if (monto > 1000000) {
+    // Para montos grandes, usar el valor del input directamente
+    const montoTexto = montoInput.value.replace(',', '.').trim();
+    monto = parseFloat(montoTexto);
+    
+    if (isNaN(monto)) {
+      alert('Por favor ingrese un monto válido. Use punto para decimales.');
+      montoInput.focus();
+      return;
+    }
+  }
+  
+  // Inicializar array si no existe
   if (!state[k].sueldo) state[k].sueldo = [];
   
   const record = {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID ? crypto.randomUUID() : generateUUID(),
     fecha: fecha,
     monto: monto,
     fuente: fuente,
@@ -122,19 +152,13 @@ function saveSueldoRecord() {
   };
   
   // Manejar archivo si existe
-  if (fileInput.files.length > 0) {
+  if (fileInput && fileInput.files.length > 0) {
     const file = fileInput.files[0];
-    storeFile(file).then(fileId => {
-      record.comprobanteId = fileId;
-      record.comprobanteNombre = file.name;
-      completeSaveSueldo(record, k);
-    }).catch(error => {
-      console.error('Error guardando archivo:', error);
-      completeSaveSueldo(record, k);
-    });
-  } else {
-    completeSaveSueldo(record, k);
+    record.comprobanteNombre = file.name;
+    // Aquí podrías implementar la lógica para guardar el archivo
   }
+  
+  completeSaveSueldo(record, k);
 }
 
 function completeSaveSueldo(record, k) {
@@ -143,13 +167,17 @@ function completeSaveSueldo(record, k) {
   
   alert('Sueldo guardado correctamente');
   loadSueldoRecords();
-  renderKPIs();
+  if (typeof renderKPIs === 'function') {
+    renderKPIs();
+  }
   clearSueldoForm();
 }
 
 function loadSueldoRecords() {
   const k = ensureMonth();
   const recordsContainer = document.getElementById('sueldoRecords');
+  if (!recordsContainer) return;
+  
   const records = state[k].sueldo || [];
   
   if (records.length === 0) {
@@ -177,17 +205,12 @@ function loadSueldoRecords() {
           ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
           ${record.comprobanteNombre ? `
             <span class="record-file">
-              <i class="fas fa-paperclip"></i> ${record.comprobanteNombre}
+              <i class="fas fa-file-invoice"></i> ${record.comprobanteNombre}
             </span>
           ` : ''}
         </div>
       </div>
       <div class="record-actions">
-        ${record.comprobanteId ? `
-          <button class="btn-icon" onclick="downloadSueldoFile('${record.comprobanteId}')" title="Descargar comprobante">
-            <i class="fas fa-download"></i>
-          </button>
-        ` : ''}
         <button class="btn-icon danger" onclick="deleteSueldoRecord('${record.id}')" title="Eliminar registro">
           <i class="fas fa-trash"></i>
         </button>
@@ -208,26 +231,31 @@ function deleteSueldoRecord(id) {
     state[k].sueldo.splice(index, 1);
     save();
     loadSueldoRecords();
-    renderKPIs();
+    if (typeof renderKPIs === 'function') {
+      renderKPIs();
+    }
     alert('Registro eliminado correctamente');
   }
 }
 
-function downloadSueldoFile(fileId) {
-  downloadFile(fileId);
-}
-
 function clearSueldoForm() {
-  document.getElementById('sueldoFecha').value = '';
-  document.getElementById('sueldoMonto').value = '';
-  document.getElementById('sueldoFuente').value = 'trabajo_principal';
-  document.getElementById('sueldoNotas').value = '';
-  document.getElementById('sueldoFileName').textContent = 'No seleccionado';
-  document.getElementById('sueldoComprobante').value = '';
+  const fechaInput = document.getElementById('sueldoFecha');
+  const montoInput = document.getElementById('sueldoMonto');
+  const fuenteSelect = document.getElementById('sueldoFuente');
+  const notasInput = document.getElementById('sueldoNotas');
+  const fileName = document.getElementById('sueldoFileName');
+  const fileInput = document.getElementById('sueldoComprobante');
+  
+  if (fechaInput) fechaInput.value = '';
+  if (montoInput) montoInput.value = '4000000.00';
+  if (fuenteSelect) fuenteSelect.value = 'trabajo_principal';
+  if (notasInput) notasInput.value = '';
+  if (fileName) fileName.textContent = 'No seleccionado';
+  if (fileInput) fileInput.value = '';
   
   // Establecer fecha actual por defecto
   const today = new Date().toISOString().split('T')[0];
-  document.getElementById('sueldoFecha').value = today;
+  if (fechaInput) fechaInput.value = today;
 }
 
 function getFuenteText(fuente) {
@@ -239,13 +267,50 @@ function getFuenteText(fuente) {
   };
   return fuentes[fuente] || fuente;
 }
-
-function formatDate(dateString) {
-  const date = new Date(dateString);
-  return date.toLocaleDateString('es-AR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-}
 </script>
+
+<style>
+.record-file {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.8rem;
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #dbeafe;
+}
+
+.record-category {
+  background: #1dd1a1;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-amount {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #059669;
+}
+
+.no-records {
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+}
+
+.no-records i {
+  font-size: 3rem;
+  margin-bottom: 15px;
+  opacity: 0.5;
+}
+
+.no-records p {
+  margin: 0;
+  font-style: italic;
+}
+</style>

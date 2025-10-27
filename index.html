@@ -23,15 +23,11 @@
         <div class="date-container">
           <i class="fas fa-calendar-alt"></i>
           <span id="mesActualDisplay">Cargando...</span>
-          <!-- Calendario cargado desde componente -->
-          <div id="calendar-container"></div>
         </div>
         <button id="logoutBtn" class="logout-btn">
           <i class="fas fa-sign-out-alt"></i> Salir
         </button>
       </header>
-
-      <input type="hidden" id="mesActual" />
 
       <section id="kpis" class="kpis">
         <div class="kpi">
@@ -56,10 +52,49 @@
     </main>
   </div>
 
-  <!-- Cargar todos los scripts -->
-  <script src="js/calendar.js"></script>
-  <script src="js/forms.js"></script>
-  <script src="js/pdf-export.js"></script>
+  <!-- Modal de calendario -->
+  <div class="calendar-modal" id="calendarModal" style="display: none;">
+    <div class="calendar-content">
+      <span class="calendar-close" onclick="closeCalendarModal()">&times;</span>
+      
+      <div class="calendar-view" id="yearView">
+        <div class="calendar-header">
+          <button class="calendar-nav" id="prevDecade"><i class="fas fa-chevron-left"></i></button>
+          <span class="calendar-year-range" id="yearRange">2020-2029</span>
+          <button class="calendar-nav" id="nextDecade"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="year-grid" id="yearGrid"></div>
+      </div>
+
+      <div class="calendar-view" id="monthView" style="display: none;">
+        <div class="calendar-header">
+          <button class="calendar-nav" id="prevYear"><i class="fas fa-chevron-left"></i></button>
+          <span class="calendar-year" id="currentYear">2025</span>
+          <button class="calendar-nav" id="nextYear"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="month-grid" id="monthGrid"></div>
+      </div>
+
+      <div class="calendar-view" id="dayView" style="display: none;">
+        <div class="calendar-header">
+          <button class="calendar-nav" id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+          <span class="calendar-month-year" id="currentMonthYear">Enero 2025</span>
+          <button class="calendar-nav" id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+        </div>
+        <div class="day-grid" id="dayGrid"></div>
+      </div>
+
+      <div class="calendar-actions">
+        <button class="calendar-btn danger" id="clearMonth">
+          <i class="fas fa-trash"></i> Borrar Este Mes
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ORDEN IMPORTANTE: Cargar scripts en este orden -->
   <script src="js/app.js"></script>
+  <script src="js/forms.js"></script>
+  <script src="js/calendar.js"></script>
 </body>
 </html>
