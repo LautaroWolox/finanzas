@@ -23,6 +23,17 @@
       </select>
     </div>
     
+    <!-- NUEVO: Método de Pago -->
+    <div class="form-group">
+      <label for="deliveryMetodoPago"><i class="fas fa-credit-card"></i> Método de Pago</label>
+      <select id="deliveryMetodoPago">
+        <option value="efectivo">Efectivo</option>
+        <option value="debito">Débito</option>
+        <option value="credito">Crédito</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    
     <div class="form-group">
       <label for="deliveryRestaurante"><i class="fas fa-utensils"></i> Restaurante/Local</label>
       <input type="text" id="deliveryRestaurante" placeholder="Nombre del restaurante">
@@ -150,6 +161,7 @@ function saveDeliveryRecord() {
   const fecha = document.getElementById('deliveryFecha').value;
   const monto = parseFloat(document.getElementById('deliveryMonto').value);
   const app = document.getElementById('deliveryApp').value;
+  const metodoPago = document.getElementById('deliveryMetodoPago').value; // NUEVO
   const restaurante = document.getElementById('deliveryRestaurante').value;
   const propina = parseFloat(document.getElementById('deliveryPropina').value) || 0;
   const envio = parseFloat(document.getElementById('deliveryEnvio').value) || 0;
@@ -179,6 +191,7 @@ function saveDeliveryRecord() {
     fecha: fecha,
     monto: monto,
     app: app,
+    metodoPago: metodoPago, // NUEVO
     restaurante: restaurante,
     propina: propina,
     envio: envio,
@@ -248,6 +261,7 @@ function loadDeliveryRecords() {
         </div>
         <div class="record-details">
           <span class="record-categoria ${record.app}">${getAppText(record.app)}</span>
+          <span class="record-metodo-pago ${record.metodoPago}">${getMetodoPagoText(record.metodoPago)}</span>
           <span class="record-restaurante">${record.restaurante}</span>
           ${record.items ? `<span class="record-items">${record.items}</span>` : ''}
           ${(record.propina > 0 || record.envio > 0) ? `
@@ -303,6 +317,7 @@ function clearDeliveryForm() {
   document.getElementById('deliveryFecha').value = '';
   document.getElementById('deliveryMonto').value = '';
   document.getElementById('deliveryApp').value = 'pedidosya';
+  document.getElementById('deliveryMetodoPago').value = 'efectivo'; // NUEVO
   document.getElementById('deliveryRestaurante').value = '';
   document.getElementById('deliveryPropina').value = '0';
   document.getElementById('deliveryEnvio').value = '0';
@@ -325,6 +340,16 @@ function getAppText(app) {
     'directo': 'Directo'
   };
   return apps[app] || app;
+}
+
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'efectivo': 'Efectivo',
+    'debito': 'Débito',
+    'credito': 'Crédito',
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
 }
 
 function formatDate(dateString) {
@@ -379,4 +404,16 @@ function formatDate(dateString) {
   background: #feca57;
   color: #222f3e;
 }
+
+.record-metodo-pago {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago.efectivo { background: #1dd1a1; color: white; }
+.record-metodo-pago.debito { background: #54a0ff; color: white; }
+.record-metodo-pago.credito { background: #ff9f40; color: white; }
+.record-metodo-pago.transferencia { background: #5f27cd; color: white; }
 </style>

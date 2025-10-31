@@ -40,7 +40,7 @@ function render(id) {
       renderGeneric('🏋️ Deportes', 'deportes', m, ['Pádel', 'Gimnasio']);
       break;
     case 'salidas':
-      renderGeneric('🎬 Salidas', 'salidas', m, ['Cine', 'Restaurante', 'Bar', 'Evento', 'Otros']);
+      renderGeneric('🎬 Salidas', 'salidas', m, ['Boliche', 'Restaurante', 'Bar', 'Evento', 'Otros']);
       break;
     case 'cochera':
       renderGeneric('🅿️ Cochera', 'cochera', m, ['Alquiler']);
@@ -361,6 +361,15 @@ function renderGeneric(title, key, m, categories) {
           </select>
         </div>
         <div class="form-group">
+          <label for="${key}MetodoPago">Método de Pago:</label>
+          <select id="${key}MetodoPago">
+            <option value="efectivo">Efectivo</option>
+            <option value="debito">Débito</option>
+            <option value="credito">Crédito</option>
+            <option value="transferencia">Transferencia</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label for="${key}Comprobante">Comprobante:</label>
           <div class="file-input-container">
             <input type="file" id="${key}Comprobante" accept="image/*,.pdf" style="display:none">
@@ -418,6 +427,7 @@ function saveGenericRecord(key) {
   const fecha = $(`#${key}Fecha`).value;
   const monto = parseFloat($(`#${key}Monto`).value);
   const categoria = $(`#${key}Categoria`).value;
+  const metodoPago = $(`#${key}MetodoPago`).value;
   
   if (!fecha || isNaN(monto)) {
     alert('Por favor complete fecha y monto');
@@ -429,6 +439,7 @@ function saveGenericRecord(key) {
     fecha,
     monto,
     categoria,
+    metodoPago,
     notas: $(`#${key}Notas`).value,
     comprobante: $(`#${key}Comprobante`).files[0]?.name || ''
   });
@@ -449,8 +460,9 @@ function renderGenericRecords(key, m) {
       <div class="record-info">
         <span class="record-date">${item.fecha}</span>
         <span class="record-category">${item.categoria}</span>
+        <span class="record-metodo-pago ${item.metodoPago}">${getMetodoPagoText(item.metodoPago)}</span>
         <span class="record-desc">${item.notas || ''}</span>
-        <span class="record-amount">${item.monto.toLocaleString()}</span>
+        <span class="record-amount">${fmt(item.monto)}</span>
       </div>
       <div class="record-actions">
         <button class="btn-icon danger" onclick="deleteGenericRecord('${key}', ${index})">
@@ -459,6 +471,16 @@ function renderGenericRecords(key, m) {
       </div>
     </div>
   `).join('');
+}
+
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'efectivo': 'Efectivo',
+    'debito': 'Débito',
+    'credito': 'Crédito',
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
 }
 
 function deleteGenericRecord(key, index) {
@@ -545,9 +567,9 @@ function updateResumen(m) {
   const balance = ingresos - gastosTotal;
   
   // Actualizar displays
-  $('#summaryIngresos').textContent = `${ingresos.toLocaleString()}`;
-  $('#summaryGastos').textContent = `${gastosTotal.toLocaleString()}`;
-  $('#summaryBalance').textContent = `${balance.toLocaleString()}`;
+  $('#summaryIngresos').textContent = fmt(ingresos);
+  $('#summaryGastos').textContent = fmt(gastosTotal);
+  $('#summaryBalance').textContent = fmt(balance);
   $('#summaryBalance').className = `summary-amount ${balance >= 0 ? 'positive' : 'negative'}`;
   
   // Renderizar gráfico

@@ -25,6 +25,17 @@
       </select>
     </div>
     
+    <!-- NUEVO: Método de Pago -->
+    <div class="form-group">
+      <label for="serviciosMetodoPago"><i class="fas fa-credit-card"></i> Método de Pago</label>
+      <select id="serviciosMetodoPago">
+        <option value="efectivo">Efectivo</option>
+        <option value="debito">Débito</option>
+        <option value="credito">Crédito</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    
     <div class="form-group">
       <label for="serviciosPeriodo"><i class="fas fa-calendar-alt"></i> Período Facturado</label>
       <input type="text" id="serviciosPeriodo" placeholder="Ej: Enero 2024">
@@ -115,6 +126,7 @@ function saveServiciosRecord() {
   const fecha = document.getElementById('serviciosFecha').value;
   const monto = parseFloat(document.getElementById('serviciosMonto').value);
   const categoria = document.getElementById('serviciosCategoria').value;
+  const metodoPago = document.getElementById('serviciosMetodoPago').value; // NUEVO
   const periodo = document.getElementById('serviciosPeriodo').value;
   const notas = document.getElementById('serviciosNotas').value;
   const fileInput = document.getElementById('serviciosComprobante');
@@ -136,6 +148,7 @@ function saveServiciosRecord() {
     fecha: fecha,
     monto: monto,
     categoria: categoria,
+    metodoPago: metodoPago, // NUEVO
     periodo: periodo,
     notas: notas,
     timestamp: new Date().toISOString()
@@ -199,6 +212,7 @@ function loadServiciosRecords() {
         </div>
         <div class="record-details">
           <span class="record-category ${record.categoria}">${getCategoriaText(record.categoria)}</span>
+          <span class="record-metodo-pago ${record.metodoPago}">${getMetodoPagoText(record.metodoPago)}</span>
           ${record.periodo ? `<span class="record-periodo">${record.periodo}</span>` : ''}
           ${record.notas ? `<span class="record-desc">${record.notas}</span>` : ''}
           ${record.comprobanteNombre ? `
@@ -247,6 +261,7 @@ function clearServiciosForm() {
   document.getElementById('serviciosFecha').value = '';
   document.getElementById('serviciosMonto').value = '';
   document.getElementById('serviciosCategoria').value = 'luz';
+  document.getElementById('serviciosMetodoPago').value = 'efectivo'; // NUEVO
   document.getElementById('serviciosPeriodo').value = '';
   document.getElementById('serviciosNotas').value = '';
   document.getElementById('serviciosFileName').textContent = 'No seleccionado';
@@ -270,6 +285,16 @@ function getCategoriaText(categoria) {
   return categorias[categoria] || categoria;
 }
 
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'efectivo': 'Efectivo',
+    'debito': 'Débito',
+    'credito': 'Crédito',
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
+}
+
 function formatDate(dateString) {
   const date = new Date(dateString);
   return date.toLocaleDateString('es-AR', {
@@ -279,3 +304,30 @@ function formatDate(dateString) {
   });
 }
 </script>
+
+<style>
+.record-category.luz { background: #ffd700; color: #000; }
+.record-category.gas { background: #ff6b6b; color: white; }
+.record-category.agua { background: #4ecdc4; color: white; }
+.record-category.internet { background: #45b7d1; color: white; }
+.record-category.arba { background: #96ceb4; color: #000; }
+.record-category.apr { background: #feca57; color: #000; }
+.record-category.otros { background: #c8d6e5; color: #222f3e; }
+
+.record-metodo-pago {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago.efectivo { background: #1dd1a1; color: white; }
+.record-metodo-pago.debito { background: #54a0ff; color: white; }
+.record-metodo-pago.credito { background: #ff9f40; color: white; }
+.record-metodo-pago.transferencia { background: #5f27cd; color: white; }
+
+.record-periodo {
+  font-style: italic;
+  color: #6b7280;
+}
+</style>

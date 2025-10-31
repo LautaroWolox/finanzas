@@ -27,6 +27,17 @@
       </select>
     </div>
     
+    <!-- NUEVO: Método de Pago -->
+    <div class="form-group">
+      <label for="transporteMetodoPago"><i class="fas fa-credit-card"></i> Método de Pago</label>
+      <select id="transporteMetodoPago">
+        <option value="efectivo">Efectivo</option>
+        <option value="debito">Débito</option>
+        <option value="credito">Crédito</option>
+        <option value="transferencia">Transferencia</option>
+      </select>
+    </div>
+    
     <div class="form-group">
       <label for="transporteOrigen"><i class="fas fa-map-marker-alt"></i> Origen</label>
       <input type="text" id="transporteOrigen" placeholder="Lugar de origen">
@@ -131,6 +142,7 @@ function saveTransporteRecord() {
   const fecha = document.getElementById('transporteFecha').value;
   const monto = parseFloat(document.getElementById('transporteMonto').value);
   const tipo = document.getElementById('transporteTipo').value;
+  const metodoPago = document.getElementById('transporteMetodoPago').value; // NUEVO
   const origen = document.getElementById('transporteOrigen').value;
   const destino = document.getElementById('transporteDestino').value;
   const distancia = parseFloat(document.getElementById('transporteDistancia').value) || 0;
@@ -154,6 +166,7 @@ function saveTransporteRecord() {
     fecha: fecha,
     monto: monto,
     tipo: tipo,
+    metodoPago: metodoPago, // NUEVO
     origen: origen,
     destino: destino,
     distancia: distancia,
@@ -222,6 +235,7 @@ function loadTransporteRecords() {
         </div>
         <div class="record-details">
           <span class="record-categoria ${record.tipo}">${getTipoText(record.tipo)}</span>
+          <span class="record-metodo-pago ${record.metodoPago}">${getMetodoPagoText(record.metodoPago)}</span>
           ${record.origen || record.destino ? `
             <span class="record-ruta">
               ${record.origen || '?'} → ${record.destino || '?'}
@@ -275,6 +289,7 @@ function clearTransporteForm() {
   document.getElementById('transporteFecha').value = '';
   document.getElementById('transporteMonto').value = '';
   document.getElementById('transporteTipo').value = 'uber';
+  document.getElementById('transporteMetodoPago').value = 'efectivo'; // NUEVO
   document.getElementById('transporteOrigen').value = '';
   document.getElementById('transporteDestino').value = '';
   document.getElementById('transporteDistancia').value = '';
@@ -300,6 +315,16 @@ function getTipoText(tipo) {
     'otros': 'Otros'
   };
   return tipos[tipo] || tipo;
+}
+
+function getMetodoPagoText(metodoPago) {
+  const metodos = {
+    'efectivo': 'Efectivo',
+    'debito': 'Débito',
+    'credito': 'Crédito',
+    'transferencia': 'Transferencia'
+  };
+  return metodos[metodoPago] || metodoPago;
 }
 
 function formatDate(dateString) {
@@ -363,4 +388,16 @@ function formatDate(dateString) {
   background: #c8d6e5;
   color: #222f3e;
 }
+
+.record-metodo-pago {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.record-metodo-pago.efectivo { background: #1dd1a1; color: white; }
+.record-metodo-pago.debito { background: #54a0ff; color: white; }
+.record-metodo-pago.credito { background: #ff9f40; color: white; }
+.record-metodo-pago.transferencia { background: #5f27cd; color: white; }
 </style>
